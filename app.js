@@ -56,6 +56,21 @@ const GOAL_TEMPLATE_WEEK_COUNT = 52;
 const GOAL_TEMPLATE_MONTH_COUNT = 12;
 const GOALS_PLUS_SETUP_STANDARD = "standard";
 const GOALS_PLUS_SETUP_RUNNING = "goalsplus-running";
+const RUNNING_WORKOUT_OPTIONS = [
+  { value: "easy", label: "Easy Run" },
+  { value: "tempo", label: "Tempo Run" },
+  { value: "long", label: "Long Run" },
+  { value: "norwegian4x4", label: "Norwegian 4x4" },
+  { value: "intervals", label: "Intervals" },
+  { value: "hill-repeats", label: "Hill Repeats" },
+  { value: "fartlek", label: "Fartlek" },
+  { value: "recovery", label: "Recovery Run" },
+  { value: "progression", label: "Progression Run" },
+  { value: "threshold", label: "Threshold Run" }
+];
+const RUNNING_WORKOUT_LABEL_BY_VALUE = new Map(
+  RUNNING_WORKOUT_OPTIONS.map((item) => [item.value, item.label])
+);
 
 const appShell = document.querySelector("#app-shell");
 const authPanel = document.querySelector("#auth-panel");
@@ -4191,7 +4206,7 @@ function renderGoalsPlusTab() {
 
   const cards = runningTrackers.map((tracker) => {
     const config = getGoalsPlusRunningConfig(tracker);
-    const entryItems = getGoalsPlusRunningEntriesForTracker(tracker);
+    const entryItems = getGoalsPlusEntriesForTracker(tracker);
     const stats = getGoalsPlusRunningStatsForEntries(entryItems);
     return {
       tracker,
@@ -4201,9 +4216,10 @@ function renderGoalsPlusTab() {
   });
 
   const totalEntries = cards.reduce((sum, item) => sum + item.stats.count, 0);
+  const totalMeasuredEntries = cards.reduce((sum, item) => sum + item.stats.measurableCount, 0);
   const totalDistance = cards.reduce((sum, item) => addAmount(sum, item.stats.totalDistance), 0);
-  const weightedVo2 = cards.reduce((sum, item) => addAmount(sum, item.stats.avgVo2 * item.stats.count), 0);
-  const avgVo2 = totalEntries > 0 ? Math.round((weightedVo2 / totalEntries) * 10) / 10 : 0;
+  const weightedVo2 = cards.reduce((sum, item) => addAmount(sum, item.stats.avgVo2 * item.stats.measurableCount), 0);
+  const avgVo2 = totalMeasuredEntries > 0 ? Math.round((weightedVo2 / totalMeasuredEntries) * 10) / 10 : 0;
 
   goalsPlusSummary.innerHTML = `
     <article class="summary-card">
@@ -4233,9 +4249,14 @@ function renderGoalsPlusTab() {
       const defaultsLine = config.runningWorkout === "norwegian4x4"
         ? `Default workout: ${formatRunningWorkout(config.runningWorkout)} (${config.workIntervalSec}s/${config.recoveryIntervalSec}s)`
         : `Default workout: ${formatRunningWorkout(config.runningWorkout)}`;
+      const workoutMix = formatRunningWorkoutMix(stats.topWorkouts.slice(0, 4));
       const detailText = stats.count > 0
-        ? `Entries ${stats.count} | Total ${formatAmount(stats.totalDistance)} mi | Time ${formatAmount(stats.totalDurationMinutes)} min | Avg pace ${formatPaceFromMinutes(stats.avgPace)} | Best pace ${formatPaceFromMinutes(stats.bestPace)} | Avg VO2 ${formatAmount(stats.avgVo2)}`
-        : "No distance/time entries logged yet.";
+        ? `Entries ${stats.count} | Workout mix ${workoutMix} | ${
+          stats.measurableCount > 0
+            ? `Measured ${stats.measurableCount} | Total ${formatAmount(stats.totalDistance)} mi | Time ${formatAmount(stats.totalDurationMinutes)} min | Avg pace ${formatPaceFromMinutes(stats.avgPace)} | Best pace ${formatPaceFromMinutes(stats.bestPace)} | Avg VO2 ${formatAmount(stats.avgVo2)}`
+            : "No distance/time measurements yet."
+        }`
+        : "No workout entries yet.";
       return `
         <li class="metric-card" style="--stagger:${index}">
           <div class="metric-top">
@@ -4256,8 +4277,12 @@ function renderGoalsPlusTab() {
           <p class="metric-line">${escapeHtml(defaultsLine)}</p>
           <p class="metric-line">${escapeHtml(
             stats.count > 0
-              ? `Avg pace ${formatPaceFromMinutes(stats.avgPace)} | Avg VO2 ${formatAmount(stats.avgVo2)}`
-              : "Add entries with distance and time to unlock pace and VO2 stats."
+              ? `Workout mix ${workoutMix} | ${
+                stats.measurableCount > 0
+                  ? `Avg pace ${formatPaceFromMinutes(stats.avgPace)} | Avg VO2 ${formatAmount(stats.avgVo2)}`
+                  : "Add distance and time to unlock pace and VO2."
+              }`
+              : "Add running entries to start exercise tracking."
           )}</p>
         </li>
       `;
@@ -5569,7 +5594,8 @@ function renderPeriod(periodName, range, now, summaryEl, listEl, emptyEl, target
             </span>
         `;
 
-      const goalsPlusStats = getGoalsPlusRunningStatsForEntries(getGoalsPlusRunningEntriesForTracker(tracker, range));
+      const goalsPlusStats = getGoalsPlusRunningStatsForEntries(getGoalsPlusEntriesForTracker(tracker, range));
+      const goalsPlusWorkoutMix = formatRunningWorkoutMix(goalsPlusStats.topWorkouts.slice(0, 3));
       const goalsPlusChipMarkup = isGoalsPlusRunningTracker(tracker)
         ? `
             <span class="pace-chip-wrap">
@@ -5579,15 +5605,23 @@ function renderPeriod(periodName, range, now, summaryEl, listEl, emptyEl, target
                 data-action="toggle-pace-detail"
                 data-detail="${escapeAttr(
                   goalsPlusStats.count > 0
-                    ? `Goals+ Running | Entries ${goalsPlusStats.count} | Avg pace ${formatPaceFromMinutes(goalsPlusStats.avgPace)} | Best pace ${formatPaceFromMinutes(goalsPlusStats.bestPace)} | Avg VO2 ${formatAmount(goalsPlusStats.avgVo2)}`
-                    : "Goals+ Running | No distance/time entries in this period yet."
+                    ? `Goals+ Running | Entries ${goalsPlusStats.count} | Workouts ${goalsPlusWorkoutMix} | ${
+                      goalsPlusStats.measurableCount > 0
+                        ? `Avg pace ${formatPaceFromMinutes(goalsPlusStats.avgPace)} | Best pace ${formatPaceFromMinutes(goalsPlusStats.bestPace)} | Avg VO2 ${formatAmount(goalsPlusStats.avgVo2)}`
+                        : "No distance/time measurements yet."
+                    }`
+                    : "Goals+ Running | No workout entries in this period yet."
                 )}"
                 aria-expanded="false"
               >Goals+</button>
               <span class="pace-detail-popover">${
                 goalsPlusStats.count > 0
-                  ? `Entries ${escapeHtml(String(goalsPlusStats.count))} | Avg pace ${escapeHtml(formatPaceFromMinutes(goalsPlusStats.avgPace))} | Best pace ${escapeHtml(formatPaceFromMinutes(goalsPlusStats.bestPace))} | Avg VO2 ${escapeHtml(formatAmount(goalsPlusStats.avgVo2))}`
-                  : "No distance/time entries in this period yet."
+                  ? `Entries ${escapeHtml(String(goalsPlusStats.count))} | Workouts ${escapeHtml(goalsPlusWorkoutMix)} | ${
+                    goalsPlusStats.measurableCount > 0
+                      ? `Avg pace ${escapeHtml(formatPaceFromMinutes(goalsPlusStats.avgPace))} | Best pace ${escapeHtml(formatPaceFromMinutes(goalsPlusStats.bestPace))} | Avg VO2 ${escapeHtml(formatAmount(goalsPlusStats.avgVo2))}`
+                      : "No distance/time measurements yet."
+                  }`
+                  : "No workout entries in this period yet."
               }</span>
             </span>
           `
@@ -10778,30 +10812,24 @@ function normalizeGoalsPlusSetupMode(value) {
 }
 
 function normalizeRunningWorkout(value) {
-  if (value === "tempo") {
-    return "tempo";
-  }
-  if (value === "long") {
-    return "long";
-  }
-  if (value === "norwegian4x4") {
-    return "norwegian4x4";
+  const normalized = String(value || "").trim();
+  if (RUNNING_WORKOUT_LABEL_BY_VALUE.has(normalized)) {
+    return normalized;
   }
   return "easy";
 }
 
 function formatRunningWorkout(value) {
   const workout = normalizeRunningWorkout(value);
-  if (workout === "tempo") {
-    return "Tempo Run";
+  return RUNNING_WORKOUT_LABEL_BY_VALUE.get(workout) || "Easy Run";
+}
+
+function formatRunningWorkoutMix(topWorkouts, fallback = "No workout entries yet") {
+  const list = Array.isArray(topWorkouts) ? topWorkouts : [];
+  if (list.length < 1) {
+    return fallback;
   }
-  if (workout === "long") {
-    return "Long Run";
-  }
-  if (workout === "norwegian4x4") {
-    return "Norwegian 4x4";
-  }
-  return "Easy Run";
+  return list.map((item) => `${formatRunningWorkout(item.workout)} ${item.count}`).join(" | ");
 }
 
 function normalizeIntervalSeconds(value, fallback = 0) {
@@ -10905,7 +10933,7 @@ function normalizeGoalsPlusEntryData(entry) {
   };
 }
 
-function getGoalsPlusRunningEntriesForTracker(tracker, range = null) {
+function getGoalsPlusEntriesForTracker(tracker, range = null) {
   if (!isGoalsPlusRunningTracker(tracker)) {
     return [];
   }
@@ -10924,22 +10952,30 @@ function getGoalsPlusRunningEntriesForTracker(tracker, range = null) {
           return false;
         }
       }
-      const normalized = normalizeGoalsPlusEntryData(entry);
-      return Boolean(normalized && normalized.distance > 0 && normalized.durationMinutes > 0);
+      return Boolean(normalizeGoalsPlusEntryData(entry));
     })
     .map((entry) => normalizeGoalsPlusEntryData(entry))
     .filter(Boolean);
 }
 
+function getGoalsPlusRunningEntriesForTracker(tracker, range = null) {
+  return getGoalsPlusEntriesForTracker(tracker, range)
+    .filter((entry) => entry.distance > 0 && entry.durationMinutes > 0);
+}
+
 function getGoalsPlusRunningStatsForEntries(entryItems) {
   const list = Array.isArray(entryItems) ? entryItems : [];
+  const workoutCounts = {};
   const totals = list.reduce((acc, item) => {
+    const workout = normalizeRunningWorkout(item.runningWorkout);
+    workoutCounts[workout] = (workoutCounts[workout] || 0) + 1;
     const distance = normalizePositiveAmount(item.distance, 0);
     const duration = normalizePositiveAmount(item.durationMinutes, 0);
-    acc.distance = addAmount(acc.distance, distance);
-    acc.durationMinutes = addAmount(acc.durationMinutes, duration);
-    acc.vo2Total = addAmount(acc.vo2Total, normalizePositiveAmount(item.estimatedVo2, 0));
     if (distance > 0 && duration > 0) {
+      acc.distance = addAmount(acc.distance, distance);
+      acc.durationMinutes = addAmount(acc.durationMinutes, duration);
+      acc.vo2Total = addAmount(acc.vo2Total, normalizePositiveAmount(item.estimatedVo2, 0));
+      acc.measurableCount += 1;
       const pace = getPaceMinutesPerMile(distance, duration);
       if (pace > 0) {
         acc.paces.push(pace);
@@ -10950,19 +10986,35 @@ function getGoalsPlusRunningStatsForEntries(entryItems) {
     distance: 0,
     durationMinutes: 0,
     vo2Total: 0,
+    measurableCount: 0,
     paces: []
   });
   const count = list.length;
   const avgPace = getPaceMinutesPerMile(totals.distance, totals.durationMinutes);
   const bestPace = totals.paces.length > 0 ? Math.min(...totals.paces) : 0;
-  const avgVo2 = count > 0 ? Math.round((totals.vo2Total / count) * 10) / 10 : 0;
+  const avgVo2 = totals.measurableCount > 0 ? Math.round((totals.vo2Total / totals.measurableCount) * 10) / 10 : 0;
+  const topWorkouts = Object.entries(workoutCounts)
+    .map(([workout, value]) => ({
+      workout: normalizeRunningWorkout(workout),
+      count: Math.max(Math.floor(Number(value) || 0), 0)
+    }))
+    .filter((item) => item.count > 0)
+    .sort((a, b) => {
+      if (a.count !== b.count) {
+        return b.count - a.count;
+      }
+      return formatRunningWorkout(a.workout).localeCompare(formatRunningWorkout(b.workout), undefined, { sensitivity: "base" });
+    });
   return {
     count,
+    measurableCount: totals.measurableCount,
     totalDistance: totals.distance,
     totalDurationMinutes: totals.durationMinutes,
     avgPace,
     bestPace,
-    avgVo2
+    avgVo2,
+    workoutCounts,
+    topWorkouts
   };
 }
 
