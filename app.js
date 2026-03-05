@@ -54,6 +54,8 @@ const CLOUD_NOTIFICATION_COLLECTION = "goalTrackerNotifications";
 const CLOUD_GOAL_SHARE_COLLECTION = "goalTrackerGoalShares";
 const GOAL_TEMPLATE_WEEK_COUNT = 52;
 const GOAL_TEMPLATE_MONTH_COUNT = 12;
+const GOALS_PLUS_SETUP_STANDARD = "standard";
+const GOALS_PLUS_SETUP_RUNNING = "goalsplus-running";
 
 const appShell = document.querySelector("#app-shell");
 const authPanel = document.querySelector("#auth-panel");
@@ -114,6 +116,14 @@ const goalMetricUnit = document.querySelector("#goal-metric-unit");
 const goalMetricAddButton = document.querySelector("#goal-metric-add-btn");
 const goalMetricsDraftList = document.querySelector("#goal-metrics-draft-list");
 const goalMetricsDraftEmpty = document.querySelector("#goal-metrics-draft-empty");
+const goalSetupMode = document.querySelector("#goal-setup-mode");
+const goalPlusRunningWorkout = document.querySelector("#goal-plus-running-workout");
+const goalPlusRunningWorkoutLabel = document.querySelector("#goal-plus-running-workout-label");
+const goalPlusRunningWorkIntervalLabel = document.querySelector("#goal-plus-running-work-interval-label");
+const goalPlusRunningRecoveryIntervalLabel = document.querySelector("#goal-plus-running-recovery-interval-label");
+const goalPlusRunningWorkInterval = document.querySelector("#goal-plus-running-work-interval");
+const goalPlusRunningRecoveryInterval = document.querySelector("#goal-plus-running-recovery-interval");
+const goalPlusRunningNote = document.querySelector("#goal-plus-running-note");
 const manageList = document.querySelector("#manage-list");
 const manageEmpty = document.querySelector("#manage-empty");
 const manageTable = document.querySelector("#manage-table");
@@ -136,6 +146,15 @@ const entryYesNoLabel = document.querySelector("#entry-yesno-label");
 const entryYesNo = document.querySelector("#entry-yesno");
 const entryMetricsWrap = document.querySelector("#entry-metrics-wrap");
 const entryMetricsGrid = document.querySelector("#entry-metrics-grid");
+const entryGoalsPlusRunningWrap = document.querySelector("#entry-goals-plus-running-wrap");
+const entryGoalsPlusRunningWorkout = document.querySelector("#entry-goals-plus-running-workout");
+const entryGoalsPlusDistance = document.querySelector("#entry-goals-plus-distance");
+const entryGoalsPlusDuration = document.querySelector("#entry-goals-plus-duration");
+const entryGoalsPlusWorkIntervalLabel = document.querySelector("#entry-goals-plus-work-interval-label");
+const entryGoalsPlusRecoveryIntervalLabel = document.querySelector("#entry-goals-plus-recovery-interval-label");
+const entryGoalsPlusWorkInterval = document.querySelector("#entry-goals-plus-work-interval");
+const entryGoalsPlusRecoveryInterval = document.querySelector("#entry-goals-plus-recovery-interval");
+const entryGoalsPlusDerived = document.querySelector("#entry-goals-plus-derived");
 const entryNotes = document.querySelector("#entry-notes");
 const todayEntriesList = document.querySelector("#today-entries-list");
 const todayEntriesEmpty = document.querySelector("#today-entries-empty");
@@ -309,6 +328,9 @@ const trendsTagFilterSelect = document.querySelector("#trends-tag-filter");
 const trendsSummary = document.querySelector("#trends-summary");
 const trendsList = document.querySelector("#trends-list");
 const trendsEmpty = document.querySelector("#trends-empty");
+const goalsPlusSummary = document.querySelector("#goals-plus-summary");
+const goalsPlusList = document.querySelector("#goals-plus-list");
+const goalsPlusEmpty = document.querySelector("#goals-plus-empty");
 
 const quartersEnabledSelect = document.querySelector("#quarters-enabled-select");
 const smartRemindersEnabledSelect = document.querySelector("#smart-reminders-enabled-select");
@@ -448,6 +470,18 @@ if (goalJournalDate) {
 if (goalUnit) {
   goalUnit.value = "units";
 }
+if (goalSetupMode) {
+  goalSetupMode.value = GOALS_PLUS_SETUP_STANDARD;
+}
+if (goalPlusRunningWorkout) {
+  goalPlusRunningWorkout.value = "easy";
+}
+if (goalPlusRunningWorkInterval) {
+  goalPlusRunningWorkInterval.value = "240";
+}
+if (goalPlusRunningRecoveryInterval) {
+  goalPlusRunningRecoveryInterval.value = "180";
+}
 if (goalWeekly) {
   goalWeekly.value = "0";
 }
@@ -524,6 +558,7 @@ if (trendsMetricSelect) {
   trendsMetricSelect.value = "consistency";
 }
 updateGoalTypeFields();
+updateEntryGoalsPlusDerivedLabel();
 renderGoalMetricsDraft();
 setAuthMode("signin");
 initializeAuth();
@@ -659,6 +694,21 @@ if (entryTracker) {
     updateEntryFormMode();
   });
 }
+
+if (entryGoalsPlusRunningWorkout) {
+  entryGoalsPlusRunningWorkout.addEventListener("change", () => {
+    syncEntryGoalsPlusWorkoutVisibility(entryGoalsPlusRunningWorkout.value);
+    updateEntryGoalsPlusDerivedLabel();
+  });
+}
+
+[entryGoalsPlusDistance, entryGoalsPlusDuration, entryGoalsPlusWorkInterval, entryGoalsPlusRecoveryInterval]
+  .filter(Boolean)
+  .forEach((control) => {
+    control.addEventListener("input", () => {
+      updateEntryGoalsPlusDerivedLabel();
+    });
+  });
 
 if (entryModeSelect) {
   entryModeSelect.addEventListener("change", () => {
@@ -952,6 +1002,18 @@ if (goalType) {
   });
 }
 
+if (goalSetupMode) {
+  goalSetupMode.addEventListener("change", () => {
+    updateGoalTypeFields();
+  });
+}
+
+if (goalPlusRunningWorkout) {
+  goalPlusRunningWorkout.addEventListener("change", () => {
+    updateGoalTypeFields();
+  });
+}
+
 if (goalWeekly) {
   goalWeekly.addEventListener("input", () => {
     handleGoalTargetInput("weekly");
@@ -1090,7 +1152,9 @@ goalForm.addEventListener("submit", (event) => {
   if (!currentUser) {
     return;
   }
-  const normalizedGoalType = normalizeGoalType(goalType ? goalType.value : "quantity");
+  const goalsPlus = buildGoalsPlusConfigFromForm();
+  const selectedGoalType = normalizeGoalType(goalType ? goalType.value : "quantity");
+  const normalizedGoalType = goalsPlus.mode === GOALS_PLUS_SETUP_RUNNING ? "quantity" : selectedGoalType;
   if (normalizedGoalType === "bucket" && !isBucketListEnabled()) {
     return;
   }
@@ -1132,6 +1196,7 @@ goalForm.addEventListener("submit", (event) => {
     monthlyGoal,
     yearlyGoal,
     progressMetrics,
+    goalsPlus,
     customWeeklyEnabled,
     customWeeklyTargets,
     customMonthlyEnabled,
@@ -1150,6 +1215,18 @@ goalForm.addEventListener("submit", (event) => {
   goalForm.reset();
   if (goalType) {
     goalType.value = "quantity";
+  }
+  if (goalSetupMode) {
+    goalSetupMode.value = GOALS_PLUS_SETUP_STANDARD;
+  }
+  if (goalPlusRunningWorkout) {
+    goalPlusRunningWorkout.value = "easy";
+  }
+  if (goalPlusRunningWorkInterval) {
+    goalPlusRunningWorkInterval.value = "240";
+  }
+  if (goalPlusRunningRecoveryInterval) {
+    goalPlusRunningRecoveryInterval.value = "180";
   }
   goalUnit.value = "units";
   if (goalPriority) {
@@ -1625,19 +1702,24 @@ entryForm.addEventListener("submit", (event) => {
   }
 
   const isBinaryGoal = isBinaryGoalType(tracker.goalType);
-  const amount = isBinaryGoal
+  let amount = isBinaryGoal
     ? (String(entryYesNo ? entryYesNo.value : "yes") === "yes" ? 1 : 0)
     : normalizePositiveAmount(entryAmount.value, 1);
   if (amount < 0) {
     return;
   }
   const metricValues = collectEntryMetricValuesFromForm(tracker);
+  const goalsPlusEntryData = collectGoalsPlusEntryDataFromForm(tracker);
+  if (goalsPlusEntryData && goalsPlusEntryData.distance > 0) {
+    amount = goalsPlusEntryData.distance;
+  }
 
   entries.unshift({
     id: createId(),
     trackerId: tracker.id,
     date: dateValue,
     amount,
+    goalsPlus: goalsPlusEntryData,
     metricValues,
     notes: String(entryNotes.value || "").trim(),
     createdAt: new Date().toISOString()
@@ -1652,6 +1734,19 @@ entryForm.addEventListener("submit", (event) => {
   } else {
     entryAmount.value = "1.00";
   }
+  if (entryGoalsPlusDistance) {
+    entryGoalsPlusDistance.value = "";
+  }
+  if (entryGoalsPlusDuration) {
+    entryGoalsPlusDuration.value = "";
+  }
+  if (entryGoalsPlusWorkInterval) {
+    entryGoalsPlusWorkInterval.value = "";
+  }
+  if (entryGoalsPlusRecoveryInterval) {
+    entryGoalsPlusRecoveryInterval.value = "";
+  }
+  updateEntryGoalsPlusDerivedLabel();
   entryNotes.value = "";
   entryDate.value = getDateKey(normalizeDate(new Date()));
   weekEntryStatusMessage = "";
@@ -1885,6 +1980,7 @@ entryListAll.addEventListener("submit", (event) => {
   entry.trackerId = trackerId;
   entry.date = date;
   entry.amount = amount;
+  entry.goalsPlus = isGoalsPlusRunningTracker(tracker) ? normalizeGoalsPlusEntryData(entry) : null;
   entry.metricValues = filterEntryMetricValuesByTracker(entry.metricValues, tracker);
   entry.notes = notes;
 
@@ -3626,6 +3722,7 @@ function render() {
   renderGoalScheduleTab();
   renderPeriodTabs();
   renderTrendsTab();
+  renderGoalsPlusTab();
   renderBucketListViewTab();
   renderSocialTab();
   renderRewardsSettings();
@@ -4069,6 +4166,105 @@ function renderTrendsTab() {
     .join("");
 }
 
+function renderGoalsPlusTab() {
+  if (!goalsPlusSummary || !goalsPlusList || !goalsPlusEmpty) {
+    return;
+  }
+  if (!currentUser) {
+    goalsPlusSummary.innerHTML = "";
+    goalsPlusList.innerHTML = "";
+    goalsPlusEmpty.style.display = "none";
+    return;
+  }
+
+  const runningTrackers = trackers
+    .filter((tracker) => !tracker.archived && isGoalsPlusRunningTracker(tracker))
+    .sort(compareTrackersByPriority);
+
+  if (runningTrackers.length < 1) {
+    goalsPlusSummary.innerHTML = "";
+    goalsPlusList.innerHTML = "";
+    goalsPlusEmpty.style.display = "block";
+    goalsPlusEmpty.textContent = "No Goals+ goals yet.";
+    return;
+  }
+
+  const cards = runningTrackers.map((tracker) => {
+    const config = getGoalsPlusRunningConfig(tracker);
+    const entryItems = getGoalsPlusRunningEntriesForTracker(tracker);
+    const stats = getGoalsPlusRunningStatsForEntries(entryItems);
+    return {
+      tracker,
+      config,
+      stats
+    };
+  });
+
+  const totalEntries = cards.reduce((sum, item) => sum + item.stats.count, 0);
+  const totalDistance = cards.reduce((sum, item) => addAmount(sum, item.stats.totalDistance), 0);
+  const weightedVo2 = cards.reduce((sum, item) => addAmount(sum, item.stats.avgVo2 * item.stats.count), 0);
+  const avgVo2 = totalEntries > 0 ? Math.round((weightedVo2 / totalEntries) * 10) / 10 : 0;
+
+  goalsPlusSummary.innerHTML = `
+    <article class="summary-card">
+      <p>Goals+ Running Goals</p>
+      <strong>${cards.length}</strong>
+    </article>
+    <article class="summary-card">
+      <p>Logged Runs</p>
+      <strong>${totalEntries}</strong>
+    </article>
+    <article class="summary-card">
+      <p>Total Distance</p>
+      <strong>${formatAmount(totalDistance)} mi</strong>
+    </article>
+    <article class="summary-card">
+      <p>Average VO2</p>
+      <strong>${totalEntries > 0 ? formatAmount(avgVo2) : "n/a"}</strong>
+    </article>
+  `;
+
+  goalsPlusEmpty.style.display = "none";
+  goalsPlusList.innerHTML = cards
+    .map((item, index) => {
+      const tracker = item.tracker;
+      const config = item.config;
+      const stats = item.stats;
+      const defaultsLine = config.runningWorkout === "norwegian4x4"
+        ? `Default workout: ${formatRunningWorkout(config.runningWorkout)} (${config.workIntervalSec}s/${config.recoveryIntervalSec}s)`
+        : `Default workout: ${formatRunningWorkout(config.runningWorkout)}`;
+      const detailText = stats.count > 0
+        ? `Entries ${stats.count} | Total ${formatAmount(stats.totalDistance)} mi | Time ${formatAmount(stats.totalDurationMinutes)} min | Avg pace ${formatPaceFromMinutes(stats.avgPace)} | Best pace ${formatPaceFromMinutes(stats.bestPace)} | Avg VO2 ${formatAmount(stats.avgVo2)}`
+        : "No distance/time entries logged yet.";
+      return `
+        <li class="metric-card" style="--stagger:${index}">
+          <div class="metric-top">
+            <h3>${escapeHtml(tracker.name)}</h3>
+            <div class="metric-controls">
+              <span class="pace-chip-wrap">
+                <button
+                  type="button"
+                  class="pace-chip pace-chip-detail"
+                  data-action="toggle-pace-detail"
+                  data-detail="${escapeAttr(`Goals+ | ${detailText}`)}"
+                  aria-expanded="false"
+                >Goals+</button>
+                <span class="pace-detail-popover">${escapeHtml(detailText)}</span>
+              </span>
+            </div>
+          </div>
+          <p class="metric-line">${escapeHtml(defaultsLine)}</p>
+          <p class="metric-line">${escapeHtml(
+            stats.count > 0
+              ? `Avg pace ${formatPaceFromMinutes(stats.avgPace)} | Avg VO2 ${formatAmount(stats.avgVo2)}`
+              : "Add entries with distance and time to unlock pace and VO2 stats."
+          )}</p>
+        </li>
+      `;
+    })
+    .join("");
+}
+
 function renderSocialTab() {
   renderFriendsSettings();
   renderSquadList();
@@ -4418,11 +4614,12 @@ function renderSoloEntrySection(standardTrackers) {
   entryTracker.innerHTML = standardTrackers
     .map((tracker) => {
       const trackerType = normalizeGoalType(tracker.goalType);
+      const goalsPlusSuffix = isGoalsPlusRunningTracker(tracker) ? " | Goals+" : "";
       const suffix = trackerType === "floating"
-        ? `${escapeHtml(tracker.unit || "items")} | Floating`
+        ? `${escapeHtml(tracker.unit || "items")} | Floating${goalsPlusSuffix}`
         : isBinaryGoalType(trackerType)
-        ? "Yes/No"
-        : escapeHtml(tracker.unit || "units");
+        ? `Yes/No${goalsPlusSuffix}`
+        : `${escapeHtml(tracker.unit || "units")}${goalsPlusSuffix}`;
       return `<option value="${tracker.id}">${escapeHtml(tracker.name)} (${suffix})</option>`;
     })
     .join("");
@@ -4457,9 +4654,11 @@ function renderSoloEntrySection(standardTrackers) {
         ? (entry.amount > 0 ? "Yes" : "No")
         : `Amount ${formatAmount(entry.amount)}`;
       const metricDetails = formatEntryMetricDetails(entry, tracker);
-      const metricMarkup = metricDetails
-        ? `<p class="muted small">${escapeHtml(metricDetails)}</p>`
-        : "";
+      const goalsPlusDetails = formatEntryGoalsPlusDetails(entry, tracker);
+      const detailLines = [metricDetails, goalsPlusDetails].filter(Boolean);
+      const metricMarkup = detailLines
+        .map((line) => `<p class="muted small">${escapeHtml(line)}</p>`)
+        .join("");
       const notes = entry.notes ? `<p class="muted small">${escapeHtml(entry.notes)}</p>` : "";
       return `
         <li class="quick-item today-entry-item" style="--stagger:${index}">
@@ -4523,6 +4722,7 @@ function renderWeekEntrySection(standardTrackers) {
         : type === "yesno"
         ? "Yes/No"
         : "Quantity";
+      const setupSuffix = isGoalsPlusRunningTracker(tracker) ? " | Goals+" : "";
       const rowCells = weekDateKeys.map((dateKey) => {
         const key = `${tracker.id}|${dateKey}`;
         const cell = existingValues.get(key);
@@ -4562,7 +4762,7 @@ function renderWeekEntrySection(standardTrackers) {
         <tr class="goal-row" style="--stagger:${trackerIndex}">
           <td class="week-entry-goal-cell">
             <strong>${escapeHtml(tracker.name)}</strong>
-            <span class="muted small">${escapeHtml(normalizeGoalUnit(tracker.unit))} | ${goalTypeLabel}</span>
+            <span class="muted small">${escapeHtml(normalizeGoalUnit(tracker.unit))} | ${goalTypeLabel}${setupSuffix}</span>
           </td>
           ${rowCells}
         </tr>
@@ -4893,9 +5093,11 @@ function renderEntryListTab() {
     .map((entry, index) => {
       const tracker = trackerById.get(entry.trackerId) || null;
       const metricDetails = formatEntryMetricDetails(entry, tracker);
-      const metricMarkup = metricDetails
-        ? `<p class="muted small entry-metric-line">${escapeHtml(metricDetails)}</p>`
-        : "";
+      const goalsPlusDetails = formatEntryGoalsPlusDetails(entry, tracker);
+      const metricMarkup = [metricDetails, goalsPlusDetails]
+        .filter(Boolean)
+        .map((line) => `<p class="muted small entry-metric-line">${escapeHtml(line)}</p>`)
+        .join("");
       return `
       <li class="entry-card" style="--stagger:${index + snapshotCount}">
         <form data-action="edit-entry" data-id="${entry.id}" class="entry-edit-form">
@@ -5367,14 +5569,39 @@ function renderPeriod(periodName, range, now, summaryEl, listEl, emptyEl, target
             </span>
         `;
 
+      const goalsPlusStats = getGoalsPlusRunningStatsForEntries(getGoalsPlusRunningEntriesForTracker(tracker, range));
+      const goalsPlusChipMarkup = isGoalsPlusRunningTracker(tracker)
+        ? `
+            <span class="pace-chip-wrap">
+              <button
+                type="button"
+                class="pace-chip pace-chip-detail"
+                data-action="toggle-pace-detail"
+                data-detail="${escapeAttr(
+                  goalsPlusStats.count > 0
+                    ? `Goals+ Running | Entries ${goalsPlusStats.count} | Avg pace ${formatPaceFromMinutes(goalsPlusStats.avgPace)} | Best pace ${formatPaceFromMinutes(goalsPlusStats.bestPace)} | Avg VO2 ${formatAmount(goalsPlusStats.avgVo2)}`
+                    : "Goals+ Running | No distance/time entries in this period yet."
+                )}"
+                aria-expanded="false"
+              >Goals+</button>
+              <span class="pace-detail-popover">${
+                goalsPlusStats.count > 0
+                  ? `Entries ${escapeHtml(String(goalsPlusStats.count))} | Avg pace ${escapeHtml(formatPaceFromMinutes(goalsPlusStats.avgPace))} | Best pace ${escapeHtml(formatPaceFromMinutes(goalsPlusStats.bestPace))} | Avg VO2 ${escapeHtml(formatAmount(goalsPlusStats.avgVo2))}`
+                  : "No distance/time entries in this period yet."
+              }</span>
+            </span>
+          `
+        : "";
+
       const progressLabel = `${formatProgressAgainstGoal(progress, target, tracker.unit)} (${pct}%)`;
 
       return `
         <li class="metric-card" style="--stagger:${indexPosition}">
           <div class="metric-top">
             <h3>${escapeHtml(tracker.name)}</h3>
-            <p class="metric-updated-through">${escapeHtml(updatedThroughLabel)}</p>
+            ${goalsPlusChipMarkup ? `<div class="metric-controls">${goalsPlusChipMarkup}</div>` : ""}
           </div>
+          <p class="metric-updated-through">${escapeHtml(updatedThroughLabel)}</p>
           <div class="progress progress-with-label">
             <span class="progress-fill ${progressToneClass}" style="width:${Math.min(pct, 100)}%"></span>
             <span class="progress-label progress-label-track">${escapeHtml(progressLabel)}</span>
@@ -8968,6 +9195,18 @@ function resetUiStateForLogin() {
   if (goalType) {
     goalType.value = "quantity";
   }
+  if (goalSetupMode) {
+    goalSetupMode.value = GOALS_PLUS_SETUP_STANDARD;
+  }
+  if (goalPlusRunningWorkout) {
+    goalPlusRunningWorkout.value = "easy";
+  }
+  if (goalPlusRunningWorkInterval) {
+    goalPlusRunningWorkInterval.value = "240";
+  }
+  if (goalPlusRunningRecoveryInterval) {
+    goalPlusRunningRecoveryInterval.value = "180";
+  }
   if (goalUnit) {
     goalUnit.value = "units";
   }
@@ -9000,6 +9239,19 @@ function resetUiStateForLogin() {
   if (entryDate) {
     entryDate.value = getDateKey(normalizeDate(new Date()));
   }
+  if (entryGoalsPlusDistance) {
+    entryGoalsPlusDistance.value = "";
+  }
+  if (entryGoalsPlusDuration) {
+    entryGoalsPlusDuration.value = "";
+  }
+  if (entryGoalsPlusWorkInterval) {
+    entryGoalsPlusWorkInterval.value = "";
+  }
+  if (entryGoalsPlusRecoveryInterval) {
+    entryGoalsPlusRecoveryInterval.value = "";
+  }
+  updateEntryGoalsPlusDerivedLabel();
   if (goalJournalDate) {
     goalJournalDate.value = getDateKey(normalizeDate(new Date()));
   }
@@ -9748,7 +10000,7 @@ function loadTrackers() {
       const monthlyGoal = normalizeGoalTargetInt(item.monthlyGoal, defaultMonthlyGoal);
       const defaultWeeklyGoal = 0;
       const weeklyGoal = normalizeGoalTargetInt(item.weeklyGoal, defaultWeeklyGoal);
-      const loadedUnit = getLockedUnitForGoalType(trackerGoalType)
+      let loadedUnit = getLockedUnitForGoalType(trackerGoalType)
         || (trackerGoalType === "floating" && !String(item.unit || "").trim()
           ? "items"
           : normalizeGoalUnit(item.unit));
@@ -9759,6 +10011,10 @@ function loadTrackers() {
       const customWeeklyTargets = normalizeCustomTargetList(item.customWeeklyTargets, GOAL_TEMPLATE_WEEK_COUNT, weeklyGoal);
       const customMonthlyEnabled = Boolean(item.customMonthlyEnabled);
       const customMonthlyTargets = normalizeCustomTargetList(item.customMonthlyTargets, GOAL_TEMPLATE_MONTH_COUNT, monthlyGoal);
+      const goalsPlus = normalizeGoalsPlusConfig(item.goalsPlus);
+      if (goalsPlus.mode === GOALS_PLUS_SETUP_RUNNING && (!String(loadedUnit || "").trim() || loadedUnit === "units")) {
+        loadedUnit = "miles";
+      }
       const hasLegacyPoints = item.goalPoints !== undefined && item.goalPoints !== null && item.goalPoints !== "";
       const legacyPoints = hasLegacyPoints ? normalizeGoalPoints(item.goalPoints, 1) : null;
       loadedTrackers.push({
@@ -9773,6 +10029,7 @@ function loadTrackers() {
         weeklyGoal,
         monthlyGoal,
         yearlyGoal,
+        goalsPlus,
         customWeeklyEnabled,
         customWeeklyTargets,
         customMonthlyEnabled,
@@ -9817,6 +10074,7 @@ function loadEntries() {
         trackerId: typeof item.trackerId === "string" ? item.trackerId : "",
         date: isDateKey(item.date) ? item.date : getDateKey(normalizeDate(new Date())),
         amount: normalizePositiveAmount(item.amount, 0),
+        goalsPlus: normalizeGoalsPlusEntryData(item),
         metricValues: normalizeEntryMetricValues(item.metricValues),
         notes: typeof item.notes === "string" ? item.notes.trim() : "",
         createdAt: typeof item.createdAt === "string" ? item.createdAt : new Date().toISOString()
@@ -10515,6 +10773,199 @@ function formatAmount(value) {
   });
 }
 
+function normalizeGoalsPlusSetupMode(value) {
+  return value === GOALS_PLUS_SETUP_RUNNING ? GOALS_PLUS_SETUP_RUNNING : GOALS_PLUS_SETUP_STANDARD;
+}
+
+function normalizeRunningWorkout(value) {
+  if (value === "tempo") {
+    return "tempo";
+  }
+  if (value === "long") {
+    return "long";
+  }
+  if (value === "norwegian4x4") {
+    return "norwegian4x4";
+  }
+  return "easy";
+}
+
+function formatRunningWorkout(value) {
+  const workout = normalizeRunningWorkout(value);
+  if (workout === "tempo") {
+    return "Tempo Run";
+  }
+  if (workout === "long") {
+    return "Long Run";
+  }
+  if (workout === "norwegian4x4") {
+    return "Norwegian 4x4";
+  }
+  return "Easy Run";
+}
+
+function normalizeIntervalSeconds(value, fallback = 0) {
+  const normalized = Math.floor(Number(value) || 0);
+  if (normalized <= 0) {
+    return Math.max(Math.floor(Number(fallback) || 0), 0);
+  }
+  return Math.min(normalized, 3600);
+}
+
+function normalizeGoalsPlusConfig(value) {
+  const raw = value && typeof value === "object" ? value : {};
+  const mode = normalizeGoalsPlusSetupMode(raw.mode);
+  if (mode !== GOALS_PLUS_SETUP_RUNNING) {
+    return {
+      mode: GOALS_PLUS_SETUP_STANDARD,
+      runningWorkout: "easy",
+      workIntervalSec: 0,
+      recoveryIntervalSec: 0
+    };
+  }
+  const runningWorkout = normalizeRunningWorkout(raw.runningWorkout);
+  const isNorwegian = runningWorkout === "norwegian4x4";
+  return {
+    mode,
+    runningWorkout,
+    workIntervalSec: isNorwegian ? normalizeIntervalSeconds(raw.workIntervalSec, 240) : 0,
+    recoveryIntervalSec: isNorwegian ? normalizeIntervalSeconds(raw.recoveryIntervalSec, 180) : 0
+  };
+}
+
+function getGoalsPlusRunningConfig(tracker) {
+  if (!tracker || typeof tracker !== "object") {
+    return normalizeGoalsPlusConfig({});
+  }
+  const normalized = normalizeGoalsPlusConfig(tracker.goalsPlus);
+  tracker.goalsPlus = normalized;
+  return normalized;
+}
+
+function getGoalsPlusSetupModeFromTracker(tracker) {
+  return getGoalsPlusRunningConfig(tracker).mode;
+}
+
+function isGoalsPlusRunningTracker(tracker) {
+  return getGoalsPlusSetupModeFromTracker(tracker) === GOALS_PLUS_SETUP_RUNNING;
+}
+
+function getPaceMinutesPerMile(distanceMiles, durationMinutes) {
+  const distance = normalizePositiveAmount(distanceMiles, 0);
+  const duration = normalizePositiveAmount(durationMinutes, 0);
+  if (distance <= 0 || duration <= 0) {
+    return 0;
+  }
+  return duration / distance;
+}
+
+function formatPaceFromMinutes(value) {
+  const pace = Number(value);
+  if (!Number.isFinite(pace) || pace <= 0) {
+    return "n/a";
+  }
+  const wholeMinutes = Math.floor(pace);
+  const seconds = Math.round((pace - wholeMinutes) * 60);
+  const carryMinute = seconds >= 60 ? 1 : 0;
+  const finalSeconds = seconds >= 60 ? 0 : seconds;
+  return `${wholeMinutes + carryMinute}:${String(finalSeconds).padStart(2, "0")} /mi`;
+}
+
+function getEstimatedRunningVo2(distanceMiles, durationMinutes) {
+  const distance = normalizePositiveAmount(distanceMiles, 0);
+  const duration = normalizePositiveAmount(durationMinutes, 0);
+  if (distance <= 0 || duration <= 0) {
+    return 0;
+  }
+  const metersPerMinute = (distance * 1609.34) / duration;
+  const vo2 = 3.5 + (0.2 * metersPerMinute);
+  return Math.round(vo2 * 10) / 10;
+}
+
+function normalizeGoalsPlusEntryData(entry) {
+  const raw = entry && entry.goalsPlus && typeof entry.goalsPlus === "object" ? entry.goalsPlus : null;
+  if (!raw || normalizeGoalsPlusSetupMode(raw.mode) !== GOALS_PLUS_SETUP_RUNNING) {
+    return null;
+  }
+  const runningWorkout = normalizeRunningWorkout(raw.runningWorkout);
+  const distance = normalizePositiveAmount(raw.distance, 0);
+  const durationMinutes = normalizePositiveAmount(raw.durationMinutes, 0);
+  const paceMinutesPerMile = getPaceMinutesPerMile(distance, durationMinutes);
+  const estimatedVo2 = getEstimatedRunningVo2(distance, durationMinutes);
+  const isNorwegian = runningWorkout === "norwegian4x4";
+  return {
+    mode: GOALS_PLUS_SETUP_RUNNING,
+    runningWorkout,
+    distance,
+    durationMinutes,
+    paceMinutesPerMile,
+    estimatedVo2,
+    workIntervalSec: isNorwegian ? normalizeIntervalSeconds(raw.workIntervalSec, 0) : 0,
+    recoveryIntervalSec: isNorwegian ? normalizeIntervalSeconds(raw.recoveryIntervalSec, 0) : 0
+  };
+}
+
+function getGoalsPlusRunningEntriesForTracker(tracker, range = null) {
+  if (!isGoalsPlusRunningTracker(tracker)) {
+    return [];
+  }
+  const hasRange = Boolean(range && range.start && range.end);
+  return entries
+    .filter((entry) => {
+      if (!entry || entry.trackerId !== tracker.id) {
+        return false;
+      }
+      if (hasRange) {
+        if (!isDateKey(entry.date)) {
+          return false;
+        }
+        const entryDate = parseDateKey(entry.date);
+        if (entryDate < range.start || entryDate > range.end) {
+          return false;
+        }
+      }
+      const normalized = normalizeGoalsPlusEntryData(entry);
+      return Boolean(normalized && normalized.distance > 0 && normalized.durationMinutes > 0);
+    })
+    .map((entry) => normalizeGoalsPlusEntryData(entry))
+    .filter(Boolean);
+}
+
+function getGoalsPlusRunningStatsForEntries(entryItems) {
+  const list = Array.isArray(entryItems) ? entryItems : [];
+  const totals = list.reduce((acc, item) => {
+    const distance = normalizePositiveAmount(item.distance, 0);
+    const duration = normalizePositiveAmount(item.durationMinutes, 0);
+    acc.distance = addAmount(acc.distance, distance);
+    acc.durationMinutes = addAmount(acc.durationMinutes, duration);
+    acc.vo2Total = addAmount(acc.vo2Total, normalizePositiveAmount(item.estimatedVo2, 0));
+    if (distance > 0 && duration > 0) {
+      const pace = getPaceMinutesPerMile(distance, duration);
+      if (pace > 0) {
+        acc.paces.push(pace);
+      }
+    }
+    return acc;
+  }, {
+    distance: 0,
+    durationMinutes: 0,
+    vo2Total: 0,
+    paces: []
+  });
+  const count = list.length;
+  const avgPace = getPaceMinutesPerMile(totals.distance, totals.durationMinutes);
+  const bestPace = totals.paces.length > 0 ? Math.min(...totals.paces) : 0;
+  const avgVo2 = count > 0 ? Math.round((totals.vo2Total / count) * 10) / 10 : 0;
+  return {
+    count,
+    totalDistance: totals.distance,
+    totalDurationMinutes: totals.durationMinutes,
+    avgPace,
+    bestPace,
+    avgVo2
+  };
+}
+
 function normalizeGoalType(value) {
   if (value === "yesno") {
     return "yesno";
@@ -10870,6 +11321,20 @@ function formatEntryMetricDetails(entry, tracker) {
   return `Metrics | ${detailParts.join(" | ")}`;
 }
 
+function formatEntryGoalsPlusDetails(entry, tracker) {
+  if (!entry || !tracker || !isGoalsPlusRunningTracker(tracker)) {
+    return "";
+  }
+  const running = normalizeGoalsPlusEntryData(entry);
+  if (!running || running.distance <= 0 || running.durationMinutes <= 0) {
+    return "";
+  }
+  const intervalText = running.runningWorkout === "norwegian4x4" && running.workIntervalSec > 0 && running.recoveryIntervalSec > 0
+    ? ` | Intervals ${running.workIntervalSec}s/${running.recoveryIntervalSec}s`
+    : "";
+  return `Goals+ | ${formatRunningWorkout(running.runningWorkout)} | ${formatAmount(running.distance)} mi in ${formatAmount(running.durationMinutes)} min | Pace ${formatPaceFromMinutes(running.paceMinutesPerMile)} | VO2 ${formatAmount(running.estimatedVo2)}${intervalText}`;
+}
+
 function formatGoalTags(value) {
   return normalizeGoalTags(value).join(", ");
 }
@@ -11215,6 +11680,46 @@ function updateGoalTypeFields() {
   if (!goalType || !goalUnit || !goalWeekly || !goalMonthly || !goalYearly) {
     return;
   }
+  const setupMode = normalizeGoalsPlusSetupMode(goalSetupMode ? goalSetupMode.value : GOALS_PLUS_SETUP_STANDARD);
+  if (goalSetupMode) {
+    goalSetupMode.value = setupMode;
+  }
+  const runningWorkout = normalizeRunningWorkout(goalPlusRunningWorkout ? goalPlusRunningWorkout.value : "easy");
+  if (goalPlusRunningWorkout) {
+    goalPlusRunningWorkout.value = runningWorkout;
+  }
+  const useGoalsPlusRunning = setupMode === GOALS_PLUS_SETUP_RUNNING;
+  const showNorwegianIntervals = useGoalsPlusRunning && runningWorkout === "norwegian4x4";
+  if (goalPlusRunningWorkoutLabel) {
+    goalPlusRunningWorkoutLabel.hidden = !useGoalsPlusRunning;
+  }
+  if (goalPlusRunningWorkIntervalLabel) {
+    goalPlusRunningWorkIntervalLabel.hidden = !showNorwegianIntervals;
+  }
+  if (goalPlusRunningRecoveryIntervalLabel) {
+    goalPlusRunningRecoveryIntervalLabel.hidden = !showNorwegianIntervals;
+  }
+  if (goalPlusRunningNote) {
+    goalPlusRunningNote.hidden = !useGoalsPlusRunning;
+  }
+  if (showNorwegianIntervals) {
+    if (goalPlusRunningWorkInterval && normalizeIntervalSeconds(goalPlusRunningWorkInterval.value, 0) < 1) {
+      goalPlusRunningWorkInterval.value = "240";
+    }
+    if (goalPlusRunningRecoveryInterval && normalizeIntervalSeconds(goalPlusRunningRecoveryInterval.value, 0) < 1) {
+      goalPlusRunningRecoveryInterval.value = "180";
+    }
+  } else {
+    if (goalPlusRunningWorkInterval) {
+      goalPlusRunningWorkInterval.value = "240";
+    }
+    if (goalPlusRunningRecoveryInterval) {
+      goalPlusRunningRecoveryInterval.value = "180";
+    }
+  }
+  if (useGoalsPlusRunning && goalType.value !== "quantity") {
+    goalType.value = "quantity";
+  }
   if (goalRewardWeeklyPoints && (!goalRewardWeeklyPoints.value || Number(goalRewardWeeklyPoints.value) < 0)) {
     goalRewardWeeklyPoints.value = "1";
   }
@@ -11255,6 +11760,11 @@ function updateGoalTypeFields() {
       goalYearly.value = String(targetDefaults.yearly);
     }
     goalUnit.placeholder = "meals, projects, items";
+  } else if (useGoalsPlusRunning) {
+    if (!String(goalUnit.value || "").trim() || goalUnit.value === "units") {
+      goalUnit.value = "miles";
+    }
+    goalUnit.placeholder = "miles";
   } else {
     if (!String(goalUnit.value || "").trim()) {
       goalUnit.value = "units";
@@ -11262,6 +11772,126 @@ function updateGoalTypeFields() {
     goalUnit.placeholder = "miles, pages, calls";
   }
   syncGoalCustomTemplateVisibility();
+}
+
+function buildGoalsPlusConfigFromForm() {
+  const setupMode = normalizeGoalsPlusSetupMode(goalSetupMode ? goalSetupMode.value : GOALS_PLUS_SETUP_STANDARD);
+  if (setupMode !== GOALS_PLUS_SETUP_RUNNING) {
+    return normalizeGoalsPlusConfig({ mode: GOALS_PLUS_SETUP_STANDARD });
+  }
+  const runningWorkout = normalizeRunningWorkout(goalPlusRunningWorkout ? goalPlusRunningWorkout.value : "easy");
+  const isNorwegian = runningWorkout === "norwegian4x4";
+  return normalizeGoalsPlusConfig({
+    mode: GOALS_PLUS_SETUP_RUNNING,
+    runningWorkout,
+    workIntervalSec: isNorwegian ? normalizeIntervalSeconds(goalPlusRunningWorkInterval ? goalPlusRunningWorkInterval.value : 0, 240) : 0,
+    recoveryIntervalSec: isNorwegian ? normalizeIntervalSeconds(goalPlusRunningRecoveryInterval ? goalPlusRunningRecoveryInterval.value : 0, 180) : 0
+  });
+}
+
+function updateEntryGoalsPlusDerivedLabel() {
+  if (!entryGoalsPlusDerived) {
+    return;
+  }
+  const distance = normalizePositiveAmount(entryGoalsPlusDistance ? entryGoalsPlusDistance.value : 0, 0);
+  const duration = normalizePositiveAmount(entryGoalsPlusDuration ? entryGoalsPlusDuration.value : 0, 0);
+  if (distance <= 0 || duration <= 0) {
+    entryGoalsPlusDerived.textContent = "Enter distance and time to calculate pace and estimated VO2.";
+    return;
+  }
+  const pace = getPaceMinutesPerMile(distance, duration);
+  const vo2 = getEstimatedRunningVo2(distance, duration);
+  entryGoalsPlusDerived.textContent = `Estimated pace ${formatPaceFromMinutes(pace)} | Estimated VO2 ${formatAmount(vo2)}`;
+}
+
+function syncEntryGoalsPlusWorkoutVisibility(workoutValue) {
+  if (!entryGoalsPlusWorkIntervalLabel || !entryGoalsPlusRecoveryIntervalLabel) {
+    return;
+  }
+  const workout = normalizeRunningWorkout(workoutValue);
+  const showIntervals = workout === "norwegian4x4";
+  entryGoalsPlusWorkIntervalLabel.hidden = !showIntervals;
+  entryGoalsPlusRecoveryIntervalLabel.hidden = !showIntervals;
+  if (!showIntervals) {
+    if (entryGoalsPlusWorkInterval) {
+      entryGoalsPlusWorkInterval.value = "";
+    }
+    if (entryGoalsPlusRecoveryInterval) {
+      entryGoalsPlusRecoveryInterval.value = "";
+    }
+  }
+}
+
+function renderEntryGoalsPlusRunningInputs(tracker) {
+  if (
+    !entryGoalsPlusRunningWrap
+    || !entryGoalsPlusRunningWorkout
+    || !entryGoalsPlusWorkIntervalLabel
+    || !entryGoalsPlusRecoveryIntervalLabel
+  ) {
+    return;
+  }
+  const running = isGoalsPlusRunningTracker(tracker);
+  entryGoalsPlusRunningWrap.hidden = !running;
+  if (!running) {
+    if (entryGoalsPlusDistance) {
+      entryGoalsPlusDistance.value = "";
+    }
+    if (entryGoalsPlusDuration) {
+      entryGoalsPlusDuration.value = "";
+    }
+    if (entryGoalsPlusWorkInterval) {
+      entryGoalsPlusWorkInterval.value = "";
+    }
+    if (entryGoalsPlusRecoveryInterval) {
+      entryGoalsPlusRecoveryInterval.value = "";
+    }
+    updateEntryGoalsPlusDerivedLabel();
+    return;
+  }
+  const config = getGoalsPlusRunningConfig(tracker);
+  const workout = normalizeRunningWorkout(config.runningWorkout);
+  entryGoalsPlusRunningWorkout.value = workout;
+  const showIntervals = workout === "norwegian4x4";
+  syncEntryGoalsPlusWorkoutVisibility(workout);
+  if (entryGoalsPlusWorkInterval) {
+    entryGoalsPlusWorkInterval.value = showIntervals
+      ? String(normalizeIntervalSeconds(config.workIntervalSec, 240))
+      : "";
+  }
+  if (entryGoalsPlusRecoveryInterval) {
+    entryGoalsPlusRecoveryInterval.value = showIntervals
+      ? String(normalizeIntervalSeconds(config.recoveryIntervalSec, 180))
+      : "";
+  }
+  updateEntryGoalsPlusDerivedLabel();
+}
+
+function collectGoalsPlusEntryDataFromForm(tracker) {
+  if (!isGoalsPlusRunningTracker(tracker)) {
+    return null;
+  }
+  const config = getGoalsPlusRunningConfig(tracker);
+  const runningWorkout = normalizeRunningWorkout(entryGoalsPlusRunningWorkout ? entryGoalsPlusRunningWorkout.value : config.runningWorkout);
+  const distance = normalizePositiveAmount(entryGoalsPlusDistance ? entryGoalsPlusDistance.value : 0, 0);
+  const durationMinutes = normalizePositiveAmount(entryGoalsPlusDuration ? entryGoalsPlusDuration.value : 0, 0);
+  const paceMinutesPerMile = getPaceMinutesPerMile(distance, durationMinutes);
+  const estimatedVo2 = getEstimatedRunningVo2(distance, durationMinutes);
+  const isNorwegian = runningWorkout === "norwegian4x4";
+  return {
+    mode: GOALS_PLUS_SETUP_RUNNING,
+    runningWorkout,
+    distance,
+    durationMinutes,
+    paceMinutesPerMile,
+    estimatedVo2,
+    workIntervalSec: isNorwegian
+      ? normalizeIntervalSeconds(entryGoalsPlusWorkInterval ? entryGoalsPlusWorkInterval.value : config.workIntervalSec, config.workIntervalSec || 240)
+      : 0,
+    recoveryIntervalSec: isNorwegian
+      ? normalizeIntervalSeconds(entryGoalsPlusRecoveryInterval ? entryGoalsPlusRecoveryInterval.value : config.recoveryIntervalSec, config.recoveryIntervalSec || 180)
+      : 0
+  };
 }
 
 function updateEntryFormMode() {
@@ -11282,6 +11912,7 @@ function updateEntryFormMode() {
     entryYesNo.value = "yes";
   }
   renderEntryMetricInputs(tracker || null);
+  renderEntryGoalsPlusRunningInputs(tracker || null);
 }
 
 function formatAmountWithUnit(value, unit) {

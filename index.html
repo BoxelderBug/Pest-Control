@@ -144,6 +144,7 @@
               <button class="menu-btn" type="button" data-tab="year">Year</button>
               <button class="menu-btn" type="button" data-tab="quarter">Quarter</button>
               <button class="menu-btn" type="button" data-tab="trends">Trends</button>
+              <button class="menu-btn" type="button" data-tab="goals-plus">Goals+</button>
               <button class="menu-btn" type="button" data-tab="bucket-list">Bucket List</button>
             </div>
           </div>
@@ -219,6 +220,39 @@
               </select>
             </label>
           </div>
+          <section id="goal-setup-wrap" class="progress-metrics-builder" aria-label="Goal setup">
+            <div class="snapshot-panel-head">
+              <h3>Goal Setup</h3>
+              <p class="muted small">Use Goals+ for common goals with expanded tracking.</p>
+            </div>
+            <div class="form-grid form-grid-3 goals-plus-config-grid">
+              <label>
+                Setup Mode
+                <select id="goal-setup-mode">
+                  <option value="standard">Standard Goal</option>
+                  <option value="goalsplus-running">Goals+ Running</option>
+                </select>
+              </label>
+              <label id="goal-plus-running-workout-label" hidden>
+                Running Option
+                <select id="goal-plus-running-workout">
+                  <option value="easy">Easy Run</option>
+                  <option value="tempo">Tempo Run</option>
+                  <option value="long">Long Run</option>
+                  <option value="norwegian4x4">Norwegian 4x4</option>
+                </select>
+              </label>
+              <label id="goal-plus-running-work-interval-label" hidden>
+                Work Interval (sec)
+                <input id="goal-plus-running-work-interval" type="number" min="1" max="3600" value="240" />
+              </label>
+              <label id="goal-plus-running-recovery-interval-label" hidden>
+                Recovery Interval (sec)
+                <input id="goal-plus-running-recovery-interval" type="number" min="1" max="3600" value="180" />
+              </label>
+            </div>
+            <p id="goal-plus-running-note" class="muted small" hidden>Running Goals+ entries include workout type, distance, and time with automatic pace and estimated VO2.</p>
+          </section>
           <div class="form-grid form-grid-3">
             <label>
               Unit
@@ -374,6 +408,37 @@
         <section id="entry-metrics-wrap" class="entry-metrics-wrap" hidden>
           <p class="muted small">Progress Metrics</p>
           <div id="entry-metrics-grid" class="form-grid form-grid-3"></div>
+        </section>
+        <section id="entry-goals-plus-running-wrap" class="entry-metrics-wrap" hidden>
+          <p class="muted small">Goals+ Running Entry</p>
+          <div class="form-grid form-grid-3">
+            <label>
+              Workout
+              <select id="entry-goals-plus-running-workout">
+                <option value="easy">Easy Run</option>
+                <option value="tempo">Tempo Run</option>
+                <option value="long">Long Run</option>
+                <option value="norwegian4x4">Norwegian 4x4</option>
+              </select>
+            </label>
+            <label>
+              Distance (miles)
+              <input id="entry-goals-plus-distance" type="number" min="0" step="0.01" placeholder="0.00" />
+            </label>
+            <label>
+              Time (minutes)
+              <input id="entry-goals-plus-duration" type="number" min="0" step="0.01" placeholder="0.00" />
+            </label>
+            <label id="entry-goals-plus-work-interval-label" hidden>
+              Work Interval (sec)
+              <input id="entry-goals-plus-work-interval" type="number" min="1" max="3600" />
+            </label>
+            <label id="entry-goals-plus-recovery-interval-label" hidden>
+              Recovery Interval (sec)
+              <input id="entry-goals-plus-recovery-interval" type="number" min="1" max="3600" />
+            </label>
+          </div>
+          <p id="entry-goals-plus-derived" class="muted small">Enter distance and time to calculate pace and estimated VO2.</p>
         </section>
         <label>
           Notes
@@ -846,6 +911,18 @@
       <div id="trends-summary" class="summary-grid"></div>
       <ul id="trends-list" class="card-list"></ul>
       <p id="trends-empty" class="empty-state">No trend data yet.</p>
+    </section>
+
+      <section class="panel tab-panel" data-tab-panel="goals-plus" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Goals+ View</h2>
+          <p class="muted">Hover Goals+ to review your running stats.</p>
+        </div>
+      </div>
+      <div id="goals-plus-summary" class="summary-grid"></div>
+      <ul id="goals-plus-list" class="card-list"></ul>
+      <p id="goals-plus-empty" class="empty-state">No Goals+ goals yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="bucket-list" hidden>

@@ -983,6 +983,10 @@ label {
   align-items: end;
 }
 
+.goals-plus-config-grid {
+  align-items: end;
+}
+
 .progress-metrics-actions {
   display: flex;
   align-items: end;
@@ -1003,6 +1007,10 @@ label {
 
 .entry-metric-line {
   margin: 2px 0 0;
+}
+
+#entry-goals-plus-derived {
+  margin: 0;
 }
 
 .goal-template-toggle-row {
