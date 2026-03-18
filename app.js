@@ -25,34 +25,35 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-const TRACKERS_STORAGE_KEY = "goal-tracker-trackers-v3";
-const ENTRIES_STORAGE_KEY = "goal-tracker-entries-v1";
-const CHECKINS_STORAGE_KEY = "goal-tracker-checkins-v1";
-const CHECKIN_ENTRIES_STORAGE_KEY = "goal-tracker-checkin-entries-v1";
-const GOAL_JOURNAL_STORAGE_KEY = "goal-tracker-goal-journal-v1";
-const SCHEDULE_STORAGE_KEY = "goal-tracker-schedules-v1";
-const SETTINGS_STORAGE_KEY = "goal-tracker-settings-v1";
-const FRIENDS_STORAGE_KEY = "goal-tracker-friends-v1";
-const SQUADS_STORAGE_KEY = "goal-tracker-squads-v1";
-const TRASH_STORAGE_KEY = "goal-tracker-trash-v1";
-const PERIOD_SNAPSHOTS_STORAGE_KEY = "goal-tracker-period-snapshots-v1";
-const REWARDS_STORAGE_KEY = "goal-tracker-rewards-v1";
-const REWARD_PURCHASES_STORAGE_KEY = "goal-tracker-reward-purchases-v1";
-const POINT_TRANSACTIONS_STORAGE_KEY = "goal-tracker-point-transactions-v1";
-const GOAL_HIT_NOTIFICATION_KEYS_STORAGE_KEY = "goal-tracker-goal-hit-notification-keys-v1";
-const MILESTONE_NOTIFICATION_KEYS_STORAGE_KEY = "goal-tracker-milestone-notification-keys-v1";
-const SMART_REMINDER_NOTIFICATION_KEYS_STORAGE_KEY = "goal-tracker-smart-reminder-notification-keys-v1";
-const ONBOARDING_DISMISSED_STORAGE_KEY = "goal-tracker-onboarding-dismissed-v1";
+const STORAGE_NAMESPACE = "pest-control";
+const TRACKERS_STORAGE_KEY = `${STORAGE_NAMESPACE}-services-v1`;
+const ENTRIES_STORAGE_KEY = `${STORAGE_NAMESPACE}-service-entries-v1`;
+const CHECKINS_STORAGE_KEY = `${STORAGE_NAMESPACE}-checkins-v1`;
+const CHECKIN_ENTRIES_STORAGE_KEY = `${STORAGE_NAMESPACE}-checkin-entries-v1`;
+const GOAL_JOURNAL_STORAGE_KEY = `${STORAGE_NAMESPACE}-service-notes-v1`;
+const SCHEDULE_STORAGE_KEY = `${STORAGE_NAMESPACE}-schedules-v1`;
+const SETTINGS_STORAGE_KEY = `${STORAGE_NAMESPACE}-settings-v1`;
+const FRIENDS_STORAGE_KEY = `${STORAGE_NAMESPACE}-friends-v1`;
+const SQUADS_STORAGE_KEY = `${STORAGE_NAMESPACE}-squads-v1`;
+const TRASH_STORAGE_KEY = `${STORAGE_NAMESPACE}-trash-v1`;
+const PERIOD_SNAPSHOTS_STORAGE_KEY = `${STORAGE_NAMESPACE}-period-snapshots-v1`;
+const REWARDS_STORAGE_KEY = `${STORAGE_NAMESPACE}-rewards-v1`;
+const REWARD_PURCHASES_STORAGE_KEY = `${STORAGE_NAMESPACE}-reward-purchases-v1`;
+const POINT_TRANSACTIONS_STORAGE_KEY = `${STORAGE_NAMESPACE}-point-transactions-v1`;
+const GOAL_HIT_NOTIFICATION_KEYS_STORAGE_KEY = `${STORAGE_NAMESPACE}-service-hit-notification-keys-v1`;
+const MILESTONE_NOTIFICATION_KEYS_STORAGE_KEY = `${STORAGE_NAMESPACE}-milestone-notification-keys-v1`;
+const SMART_REMINDER_NOTIFICATION_KEYS_STORAGE_KEY = `${STORAGE_NAMESPACE}-smart-reminder-notification-keys-v1`;
+const ONBOARDING_DISMISSED_STORAGE_KEY = `${STORAGE_NAMESPACE}-onboarding-dismissed-v1`;
 const GOAL_JOURNAL_SUBJECT_DEFAULT = "General Journal";
-const LEGACY_TRACKERS_KEY = "goal-tracker-trackers-v2";
-const USERS_STORAGE_KEY = "goal-tracker-users-v1";
-const SESSION_STORAGE_KEY = "goal-tracker-session-v1";
+const LEGACY_TRACKERS_KEY = `${STORAGE_NAMESPACE}-services-v0`;
+const USERS_STORAGE_KEY = `${STORAGE_NAMESPACE}-users-v1`;
+const SESSION_STORAGE_KEY = `${STORAGE_NAMESPACE}-session-v1`;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const CLOUD_LOCAL_UPDATED_AT_KEY = "goal-tracker-cloud-local-updated-v1";
-const CLOUD_PROFILE_COLLECTION = "goalTrackerProfiles";
-const CLOUD_DATA_COLLECTION = "goalTrackerData";
-const CLOUD_NOTIFICATION_COLLECTION = "goalTrackerNotifications";
-const CLOUD_GOAL_SHARE_COLLECTION = "goalTrackerGoalShares";
+const CLOUD_LOCAL_UPDATED_AT_KEY = `${STORAGE_NAMESPACE}-cloud-local-updated-v1`;
+const CLOUD_PROFILE_COLLECTION = "pestControlProfiles";
+const CLOUD_DATA_COLLECTION = "pestControlData";
+const CLOUD_NOTIFICATION_COLLECTION = "pestControlNotifications";
+const CLOUD_GOAL_SHARE_COLLECTION = "pestControlServiceShares";
 const GOAL_TEMPLATE_WEEK_COUNT = 52;
 const GOAL_TEMPLATE_MONTH_COUNT = 12;
 const GOALS_PLUS_SETUP_STANDARD = "standard";
@@ -1516,7 +1517,7 @@ goalForm.addEventListener("submit", (event) => {
   updateGoalTypeFields();
   render();
   if (migrateSourceTracker && (migrationResult.movedEntries > 0 || migrationResult.movedSchedules > 0 || migrationResult.movedJournalLinks > 0 || migrationResult.archivedSource)) {
-    const archiveNote = migrationResult.archivedSource ? " Source goal archived." : "";
+    const archiveNote = migrationResult.archivedSource ? " Source service archived." : "";
     alert(`Migration complete from "${migrateSourceTracker.name}" to "${nextTracker.name}". Moved ${migrationResult.movedEntries} entr${migrationResult.movedEntries === 1 ? "y" : "ies"}, ${migrationResult.movedSchedules} schedule item${migrationResult.movedSchedules === 1 ? "" : "s"}, and ${migrationResult.movedJournalLinks} journal link${migrationResult.movedJournalLinks === 1 ? "" : "s"}.${archiveNote}`);
   }
 });
@@ -1589,7 +1590,7 @@ if (manageGoalsForm) {
       );
       const selectedFriend = friendByEmail.get(selectedPartnerEmail) || null;
       if (!nameValue || (!lockedUnit && !unitValue)) {
-        alert("Each goal needs a name and unit before saving.");
+        alert("Each service needs a name and unit before saving.");
         if (!nameValue) {
           nameInput.focus();
         } else {
@@ -1647,7 +1648,7 @@ if (manageGoalsForm) {
 
     if (deleteIds.size > 0) {
       const prompt = deleteNames.length === 1
-        ? `Delete goal "${deleteNames[0]}"? This also removes related entries and schedule items.`
+        ? `Delete service "${deleteNames[0]}"? This also removes related entries and schedule items.`
         : `Delete ${deleteIds.size} goals? This also removes related entries and schedule items.`;
       const confirmed = confirm(prompt);
       if (!confirmed) {
@@ -1978,7 +1979,7 @@ entryForm.addEventListener("submit", (event) => {
   const metricValues = markNotApplicable ? {} : collectEntryMetricValuesFromForm(tracker);
   const goalsPlusEntryData = markNotApplicable ? null : collectGoalsPlusEntryDataFromForm(tracker);
   if (!markNotApplicable && goalsPlusEntryData && goalsPlusEntryData.mode === GOALS_PLUS_SETUP_GOLF && goalsPlusEntryData.score <= 0) {
-    alert("Enter a golf score greater than 0 for Goals+ golf entries.");
+    alert("Enter a golf score greater than 0 for Operations+ golf entries.");
     return;
   }
   if (!markNotApplicable && goalsPlusEntryData && goalsPlusEntryData.mode === GOALS_PLUS_SETUP_RUNNING && goalsPlusEntryData.distance > 0) {
@@ -3803,7 +3804,7 @@ function createDeepDiveInsightsMarkup(tracker, periodName, range, series, index,
   const scopeLabel = selectedScope === "total" ? "Total" : "Period";
   const disableScopeControl = selectedMetric === "hit";
   const historyTitle = selectedMetric === "hit"
-    ? `Goal Hit vs last ${lookbackCount} ${modeLabel.toLowerCase()}`
+    ? `Service Hit vs last ${lookbackCount} ${modeLabel.toLowerCase()}`
     : `${metricLabel} (${scopeLabel}) vs last ${lookbackCount} periods`;
   const unitSuffix = selectedMetric === "hit" ? "" : ` (${escapeHtml(unit)})`;
   const viewMarkup = selectedGraphType === "line"
@@ -3852,7 +3853,7 @@ function createDeepDiveInsightsMarkup(tracker, periodName, range, series, index,
               <select data-action="set-history-metric-select" class="avg-control-select">
                 <option value="avg" ${selectedMetric === "avg" ? "selected" : ""}>Average</option>
                 <option value="total" ${selectedMetric === "total" ? "selected" : ""}>Sum</option>
-                <option value="hit" ${selectedMetric === "hit" ? "selected" : ""}>Goal Hit</option>
+                <option value="hit" ${selectedMetric === "hit" ? "selected" : ""}>Service Hit</option>
               </select>
             </label>
             <label class="avg-control-label">
@@ -4452,7 +4453,7 @@ async function handleSharedGoalEntrySubmit(event) {
   const amount = normalizePositiveAmount(form.elements.amount ? form.elements.amount.value : "", -1);
   const notes = String(form.elements.notes ? form.elements.notes.value : "").trim();
   if (!shareId || !ownerId || !goalId || !isDateKey(dateValue) || amount < 0) {
-    alert("Enter a valid date and amount for the shared goal update.");
+    alert("Enter a valid date and amount for the shared service update.");
     return;
   }
   const result = await addSharedGoalEntryUpdate(shareId, ownerId, goalId, dateValue, amount, notes);
@@ -4693,7 +4694,7 @@ function summarizeGoalNamesForDetail(names, limit = 6) {
 
 function buildProjectedWeekHitDetailText(onPaceGoals, offPaceGoals, measurableGoalCount) {
   if (measurableGoalCount < 1) {
-    return "No measurable weekly goals.";
+    return "No measurable weekly services.";
   }
   const onPaceText = summarizeGoalNamesForDetail(onPaceGoals);
   const offPaceText = summarizeGoalNamesForDetail(offPaceGoals);
@@ -4850,7 +4851,7 @@ function getMissingEntryDateItems(now = new Date()) {
 function getMissingEntryDateSummaryText(goalNames) {
   const names = Array.isArray(goalNames) ? goalNames.filter(Boolean) : [];
   if (names.length < 1) {
-    return "No goals missing.";
+    return "No services missing.";
   }
   if (names.length <= 4) {
     return names.join(", ");
@@ -5069,7 +5070,7 @@ function renderGoalsPlusTab() {
     goalsPlusSummary.innerHTML = "";
     goalsPlusList.innerHTML = "";
     goalsPlusEmpty.style.display = "block";
-    goalsPlusEmpty.textContent = "No Goals+ goals yet.";
+    goalsPlusEmpty.textContent = "No Operations+ services yet.";
     return;
   }
 
@@ -5098,7 +5099,7 @@ function renderGoalsPlusTab() {
 
   goalsPlusSummary.innerHTML = `
     <article class="summary-card">
-      <p>Goals+ Goals</p>
+      <p>Operations+ Goals</p>
       <strong>${cards.length}</strong>
     </article>
     <article class="summary-card">
@@ -5153,9 +5154,9 @@ function renderGoalsPlusTab() {
                   type="button"
                   class="pace-chip pace-chip-detail"
                   data-action="toggle-pace-detail"
-                  data-detail="${escapeAttr(`Goals+ | ${detailText}`)}"
+                  data-detail="${escapeAttr(`Operations+ | ${detailText}`)}"
                   aria-expanded="false"
-                >Goals+</button>
+                >Operations+</button>
                 <span class="pace-detail-popover">${escapeHtml(detailText)}</span>
               </span>
             </div>
@@ -5247,29 +5248,29 @@ function renderSquadList() {
       }).slice(0, 4);
       const latestMarkup = latestEntryByGoal.length > 0
         ? `<ul class="simple-list">${latestEntryByGoal.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`
-        : "<p class=\"muted small\">No goals added yet.</p>";
+        : "<p class=\"muted small\">No services added yet.</p>";
       return `
         <li class="entry-card" style="--stagger:${index}">
           <div class="metric-top">
             <strong>${escapeHtml(squad.name)}</strong>
             <button class="btn btn-danger" type="button" data-action="delete-squad" data-id="${squad.id}">Delete</button>
           </div>
-          <p class="metric-line">${escapeHtml(squad.notes || "No squad notes")} | ${goalCount} goal${goalCount === 1 ? "" : "s"} | Weekly Goal ${formatAmount(squadWeeklyGoal)}</p>
+          <p class="metric-line">${escapeHtml(squad.notes || "No squad notes")} | ${goalCount} service${goalCount === 1 ? "" : "s"} | Weekly Target ${formatAmount(squadWeeklyGoal)}</p>
           <div class="progress progress-with-label">
             <span class="progress-fill ${weeklyProgressFillClass}" style="width:${weeklyPercent}%"></span>
             <span class="progress-label progress-label-track">Week Progress ${escapeHtml(weeklyGoalLabel)}</span>
           </div>
           <div class="actions">
             <label class="inline-control">
-              Squad Weekly Goal
+              Squad Weekly Target
               <input data-squad-weekly-goal="${escapeAttr(squad.id)}" type="number" min="0" max="1000000" value="${squadWeeklyGoal}" />
             </label>
-            <button class="btn" type="button" data-action="save-squad-weekly-goal" data-id="${squad.id}">Save Weekly Goal</button>
+            <button class="btn" type="button" data-action="save-squad-weekly-goal" data-id="${squad.id}">Save Weekly Target</button>
           </div>
           ${latestMarkup}
           <div class="actions">
             <label class="inline-control">
-              Add Goal
+              Add Service
               <select data-squad-goal-select="${escapeAttr(squad.id)}">
                 <option value="">Choose goal</option>
                 ${trackerOptions}
@@ -5529,10 +5530,10 @@ function renderEntryTab() {
 
 function renderSoloEntrySection(standardTrackers) {
   if (standardTrackers.length < 1) {
-    entryTracker.innerHTML = "<option value=''>No goals</option>";
+    entryTracker.innerHTML = "<option value=''>No services</option>";
     entryTracker.disabled = true;
     todayEntriesList.innerHTML = "";
-    todayEntriesEmpty.textContent = "Create active quantity/yes-no/floating goals or use Bucket List Entry for bucket goals.";
+    todayEntriesEmpty.textContent = "Create active quantity/yes-no/floating services or use Bucket List Entry for milestone services.";
     todayEntriesEmpty.style.display = "block";
     updateEntryFormMode();
     return;
@@ -5543,7 +5544,7 @@ function renderSoloEntrySection(standardTrackers) {
   entryTracker.innerHTML = standardTrackers
     .map((tracker) => {
       const trackerType = normalizeGoalType(tracker.goalType);
-      const goalsPlusSuffix = isGoalsPlusTracker(tracker) ? " | Goals+" : "";
+      const goalsPlusSuffix = isGoalsPlusTracker(tracker) ? " | Operations+" : "";
       const suffix = trackerType === "floating"
         ? `${escapeHtml(tracker.unit || "items")} | Floating${goalsPlusSuffix}`
         : isBinaryGoalType(trackerType)
@@ -5594,7 +5595,7 @@ function renderSoloEntrySection(standardTrackers) {
       return `
         <li class="quick-item today-entry-item" style="--stagger:${index}">
           <div>
-            <strong>${escapeHtml(tracker ? tracker.name : "Unknown Goal")}</strong>
+            <strong>${escapeHtml(tracker ? tracker.name : "Unknown Service")}</strong>
             <p class="muted small">${timeLabel} | ${amountLabel}</p>
             ${metricMarkup}
             ${notes}
@@ -5653,7 +5654,7 @@ function renderWeekEntrySection(standardTrackers) {
         : type === "yesno"
         ? "Yes/No"
         : "Quantity";
-      const setupSuffix = isGoalsPlusTracker(tracker) ? " | Goals+" : "";
+      const setupSuffix = isGoalsPlusTracker(tracker) ? " | Operations+" : "";
       const rowCells = weekDateKeys.map((dateKey) => {
         const key = `${tracker.id}|${dateKey}`;
         const cell = existingValues.get(key);
@@ -5792,13 +5793,13 @@ function renderBucketEntryTab() {
 
   const bucketTrackers = getBucketTrackers("active");
   if (bucketTrackers.length < 1) {
-    bucketEntryGoal.innerHTML = "<option value=''>No bucket goals</option>";
+    bucketEntryGoal.innerHTML = "<option value=''>No milestone services</option>";
     bucketEntryGoal.disabled = true;
     if (submitButton) {
       submitButton.disabled = true;
     }
     recentBucketEntriesList.innerHTML = "";
-    recentBucketEntriesEmpty.textContent = "Create a Bucket List goal in Manage Goals first.";
+    recentBucketEntriesEmpty.textContent = "Create a Milestone Service in Manage Services first.";
     recentBucketEntriesEmpty.style.display = "block";
     return;
   }
@@ -5810,7 +5811,7 @@ function renderBucketEntryTab() {
     return !(status && status.isClosed);
   });
   if (openBucketTrackers.length < 1) {
-    bucketEntryGoal.innerHTML = "<option value=''>All bucket goals are already closed</option>";
+    bucketEntryGoal.innerHTML = "<option value=''>All milestone services are already closed</option>";
     bucketEntryGoal.disabled = true;
     if (submitButton) {
       submitButton.disabled = true;
@@ -5842,7 +5843,7 @@ function renderBucketEntryTab() {
 
   if (recentCloseEntries.length < 1) {
     recentBucketEntriesList.innerHTML = "";
-    recentBucketEntriesEmpty.textContent = "No bucket goals have been closed yet.";
+    recentBucketEntriesEmpty.textContent = "No milestone services have been closed yet.";
     recentBucketEntriesEmpty.style.display = "block";
     return;
   }
@@ -5856,7 +5857,7 @@ function renderBucketEntryTab() {
       return `
         <li class="quick-item today-entry-item" style="--stagger:${index}">
           <div>
-            <strong>${escapeHtml(tracker ? tracker.name : "Unknown Bucket Goal")}</strong>
+            <strong>${escapeHtml(tracker ? tracker.name : "Unknown Milestone Service")}</strong>
             <p class="muted small">${formatDate(parseDateKey(entry.date))} | Closed</p>
             ${notes}
           </div>
@@ -6170,10 +6171,10 @@ function renderGoalScheduleTab() {
 
   const schedulableTrackers = trackers.filter((tracker) => !tracker.archived);
   if (schedulableTrackers.length < 1) {
-    scheduleGoal.innerHTML = "<option value=''>No goals</option>";
+    scheduleGoal.innerHTML = "<option value=''>No services</option>";
     scheduleGoal.disabled = true;
     scheduleList.innerHTML = "";
-    scheduleEmpty.textContent = "Create active goals in Manage Goals before scheduling.";
+    scheduleEmpty.textContent = "Create active goals in Manage Services before scheduling.";
     scheduleEmpty.style.display = "block";
     return;
   }
@@ -6233,7 +6234,7 @@ function renderGoalScheduleTab() {
       const frontPreview = items.length > 0
         ? `<p class="schedule-day-preview">${escapeHtml(items.slice(0, 2).map((item) => {
             const tracker = trackerById.get(item.trackerId);
-            return tracker ? tracker.name : "Archived/Unknown Goal";
+            return tracker ? tracker.name : "Archived/Unknown Service";
           }).join(" | "))}${items.length > 2 ? " ..." : ""}</p>`
         : "";
 
@@ -6241,7 +6242,7 @@ function renderGoalScheduleTab() {
         ? items
           .map((item, itemIndex) => {
             const tracker = trackerById.get(item.trackerId);
-            const goalName = tracker ? tracker.name : "Archived/Unknown Goal";
+            const goalName = tracker ? tracker.name : "Archived/Unknown Service";
             const timeLabel = `${escapeHtml(item.startTime || "--:--")} - ${escapeHtml(item.endTime || "--:--")}`;
             return `
               <article class="schedule-event" style="--stagger:${itemIndex}">
@@ -6565,15 +6566,15 @@ function renderPeriod(periodName, range, now, summaryEl, listEl, emptyEl, target
                 data-action="toggle-pace-detail"
                 data-detail="${escapeAttr(
                   goalsPlusRunningStats.count > 0
-                    ? `Goals+ Running | Entries ${goalsPlusRunningStats.count} | Workouts ${goalsPlusWorkoutMix} | ${
+                    ? `Operations+ Running | Entries ${goalsPlusRunningStats.count} | Workouts ${goalsPlusWorkoutMix} | ${
                       goalsPlusRunningStats.measurableCount > 0
                         ? `Avg pace ${formatPaceFromMinutes(goalsPlusRunningStats.avgPace)} | Best pace ${formatPaceFromMinutes(goalsPlusRunningStats.bestPace)} | Avg VO2 ${formatAmount(goalsPlusRunningStats.avgVo2)}`
                         : "No distance/time measurements yet."
                     }`
-                    : "Goals+ Running | No workout entries in this period yet."
+                    : "Operations+ Running | No workout entries in this period yet."
                 )}"
                 aria-expanded="false"
-              >Goals+</button>
+              >Operations+</button>
               <span class="pace-detail-popover">${
                 goalsPlusRunningStats.count > 0
                   ? `Entries ${escapeHtml(String(goalsPlusRunningStats.count))} | Workouts ${escapeHtml(goalsPlusWorkoutMix)} | ${
@@ -6594,15 +6595,15 @@ function renderPeriod(periodName, range, now, summaryEl, listEl, emptyEl, target
                 data-action="toggle-pace-detail"
                 data-detail="${escapeAttr(
                   goalsPlusGolfStats.count > 0
-                    ? `Goals+ ${formatGoalsPlusGolfType(getGoalsPlusRunningConfig(tracker).golfType)} | Entries ${goalsPlusGolfStats.count} | ${
+                    ? `Operations+ ${formatGoalsPlusGolfType(getGoalsPlusRunningConfig(tracker).golfType)} | Entries ${goalsPlusGolfStats.count} | ${
                       goalsPlusGolfStats.scoredCount > 0
                         ? `Avg score ${formatAmount(goalsPlusGolfStats.avgScore)} | Best score ${formatAmount(goalsPlusGolfStats.bestScore)}`
                         : "No score data yet."
                     }`
-                    : "Goals+ Golf | No entries in this period yet."
+                    : "Operations+ Golf | No entries in this period yet."
                 )}"
                 aria-expanded="false"
-              >Goals+</button>
+              >Operations+</button>
               <span class="pace-detail-popover">${
                 goalsPlusGolfStats.count > 0
                   ? (goalsPlusGolfStats.scoredCount > 0
@@ -6700,7 +6701,7 @@ function renderPeriod(periodName, range, now, summaryEl, listEl, emptyEl, target
   const checkInPeriodLabel = periodName === "year" ? "yearly" : periodName === "month" ? "monthly" : "weekly";
 
   listEl.innerHTML = `
-    ${createPeriodAccordionSectionMarkup(periodName, "goals", "Goals", goalCardsMarkup, "No goals configured.")}
+    ${createPeriodAccordionSectionMarkup(periodName, "goals", "Goals", goalCardsMarkup, "No services configured.")}
     ${createPeriodAccordionSectionMarkup(periodName, "checkins", "Check-ins", checkInCardsMarkup, `No ${checkInPeriodLabel} check-ins configured.`)}
   `;
 }
@@ -6788,9 +6789,9 @@ function renderSharedGoalsSection(periodName, range, listEl) {
     createPeriodAccordionSectionMarkup(
       periodName,
       "shared",
-      "Shared Goals",
+      "Shared Services",
       cardsMarkup,
-      "No shared goals available."
+      "No shared services available."
     )
   );
 }
@@ -6806,7 +6807,7 @@ function buildSharedGoalCardsMarkup(periodName, range, approvedShares) {
         return `
           <li class="metric-card" style="--stagger:${indexPosition}">
             <div class="metric-top">
-              <h3>${escapeHtml(share.goalName || "Shared Goal")}</h3>
+              <h3>${escapeHtml(share.goalName || "Shared Service")}</h3>
               <span class="pace-chip">Loading</span>
             </div>
             <p class="metric-line">Shared by ${escapeHtml(share.ownerUsername || "friend")}.</p>
@@ -6819,10 +6820,10 @@ function buildSharedGoalCardsMarkup(periodName, range, approvedShares) {
         return `
           <li class="metric-card" style="--stagger:${indexPosition}">
             <div class="metric-top">
-              <h3>${escapeHtml(share.goalName || "Shared Goal")}</h3>
+              <h3>${escapeHtml(share.goalName || "Shared Service")}</h3>
               <span class="pace-chip pace-off">Unavailable</span>
             </div>
-            <p class="metric-line">This shared goal is no longer available.</p>
+            <p class="metric-line">This shared service is no longer available.</p>
           </li>
         `;
       }
@@ -6892,7 +6893,7 @@ function closeOutPeriod(periodName) {
   const index = buildEntryIndex(entries);
   const snapshot = buildPeriodCloseoutSnapshot(normalizedPeriod, range, now, index);
   if (!snapshot) {
-    alert(`No goals or check-ins to snapshot for this ${normalizedPeriod}.`);
+    alert(`No services or check-ins to snapshot for this ${normalizedPeriod}.`);
     return;
   }
 
@@ -8680,7 +8681,7 @@ function hasFirebaseConfig(config) {
 }
 
 function initializeFirebaseServices() {
-  const config = window.GOAL_TRACKER_FIREBASE_CONFIG;
+  const config = window.PEST_CONTROL_FIREBASE_CONFIG;
   firebaseConfigured = hasFirebaseConfig(config);
   if (!firebaseConfigured) {
     return false;
@@ -8727,7 +8728,7 @@ function getNotificationMessage(item) {
     return `${actorName} declined accountability access for "${goalName}".`;
   }
   if (type === "goal-share-entry-update") {
-    const goalName = String(item.goalName || "a shared goal");
+    const goalName = String(item.goalName || "a shared service");
     const amount = formatAmount(normalizePositiveAmount(item.entryAmount, 0));
     const unit = normalizeGoalUnit(item.goalUnit || "units");
     const dateLabel = isDateKey(item.entryDate) ? formatDate(parseDateKey(item.entryDate)) : "today";
@@ -8745,7 +8746,7 @@ function getNotificationMessage(item) {
       : item.period === "year"
       ? "yearly"
       : "weekly";
-    return `Goal hit: "${goalName}" ${periodLabel} target (${progress}/${target} ${unit}).`;
+    return `Service hit: "${goalName}" ${periodLabel} target (${progress}/${target} ${unit}).`;
   }
   if (type === "goal-milestone") {
     const goalName = String(item.goalName || "Goal");
@@ -9483,7 +9484,7 @@ async function loadSharedOwnerData(ownerId) {
         .filter((item) => item && typeof item.id === "string")
         .map((item) => ({
           id: item.id,
-          name: typeof item.name === "string" ? item.name : "Shared Goal",
+          name: typeof item.name === "string" ? item.name : "Shared Service",
           goalType: normalizeGoalType(item.goalType),
           unit: normalizeGoalUnit(item.unit),
           weeklyGoal: normalizeGoalTargetInt(item.weeklyGoal, 0),
@@ -9539,19 +9540,19 @@ async function addSharedGoalEntryUpdate(shareId, ownerId, goalId, dateValue, amo
   }
   const share = sharedGoalShares.find((item) => item.id === shareId);
   if (!share || share.status !== "approved" || share.partnerId !== currentUser.id) {
-    return { success: false, message: "This shared goal is not available for updates." };
+    return { success: false, message: "This shared service is not available for updates." };
   }
   if (share.ownerId !== ownerId || share.ownerGoalId !== goalId) {
-    return { success: false, message: "This shared goal update request is invalid." };
+    return { success: false, message: "This shared service update request is invalid." };
   }
   const dataRef = getCloudDataRef(ownerId);
   if (!dataRef) {
-    return { success: false, message: "Unable to update this shared goal right now." };
+    return { success: false, message: "Unable to update this shared service right now." };
   }
   try {
     const snapshot = await getDoc(dataRef);
     if (!snapshot.exists()) {
-      return { success: false, message: "Shared goal owner data is unavailable." };
+      return { success: false, message: "Shared service owner data is unavailable." };
     }
     const data = snapshot.data() || {};
     const existingEntries = Array.isArray(data.entries) ? data.entries : [];
@@ -9586,7 +9587,7 @@ async function addSharedGoalEntryUpdate(shareId, ownerId, goalId, dateValue, amo
     });
     return { success: true, message: "" };
   } catch {
-    return { success: false, message: "Unable to save shared goal update right now." };
+    return { success: false, message: "Unable to save shared service update right now." };
   }
 }
 
@@ -10415,7 +10416,7 @@ function importEntriesFromCsv(text) {
 
   const headers = rows[0].map((cell) => String(cell || "").trim());
   if (headers.length < 2) {
-    return { error: "CSV must include Date plus at least one goal column.", changed: false, message: "" };
+    return { error: "CSV must include Date plus at least one service column.", changed: false, message: "" };
   }
   if (getUsernameKey(headers[0]) !== "date") {
     return { error: "Column A header must be Date.", changed: false, message: "" };
@@ -10436,7 +10437,7 @@ function importEntriesFromCsv(text) {
   }
 
   if (mappedColumns.length < 1) {
-    return { error: "No goal headers matched existing goals in Manage Goals.", changed: false, message: "" };
+    return { error: "No service headers matched existing services in Manage Services.", changed: false, message: "" };
   }
 
   const replacementValues = new Map();
@@ -10487,7 +10488,7 @@ function importEntriesFromCsv(text) {
   return {
     changed: true,
     error: "",
-    message: `CSV import complete. Updated ${inserted} entries${skippedRows > 0 ? `, skipped ${skippedRows} invalid row(s)` : ""}${ignoredGoalColumns > 0 ? `, ignored ${ignoredGoalColumns} unmatched goal column(s)` : ""}.`
+    message: `CSV import complete. Updated ${inserted} entries${skippedRows > 0 ? `, skipped ${skippedRows} invalid row(s)` : ""}${ignoredGoalColumns > 0 ? `, ignored ${ignoredGoalColumns} unmatched service column(s)` : ""}.`
   };
 }
 
@@ -10501,7 +10502,7 @@ function exportEntriesToCsv() {
     .slice()
     .sort(compareTrackersByPriority);
   if (goalColumns.length < 1) {
-    return { error: "Create at least one goal before exporting CSV.", csvText: "", filename: "", message: "" };
+    return { error: "Create at least one service before exporting CSV.", csvText: "", filename: "", message: "" };
   }
 
   const goalIds = new Set(goalColumns.map((tracker) => tracker.id));
@@ -10547,8 +10548,8 @@ function exportEntriesToCsv() {
   return {
     error: "",
     csvText,
-    filename: `goal-tracker-entries-${getDateKey(normalizeDate(new Date()))}.csv`,
-    message: `CSV export complete. Downloaded ${orderedDateKeys.length} date row(s) across ${goalColumns.length} goal column(s).`
+    filename: `pest-control-entries-${getDateKey(normalizeDate(new Date()))}.csv`,
+    message: `CSV export complete. Downloaded ${orderedDateKeys.length} date row(s) across ${goalColumns.length} service column(s).`
   };
 }
 
@@ -12610,10 +12611,10 @@ function renderYearSingleGoalSection(standardTrackers) {
 
   if (standardTrackers.length < 1) {
     yearSingleGoalForm.style.display = "none";
-    yearSingleGoalSelect.innerHTML = "<option value=''>No goals</option>";
+    yearSingleGoalSelect.innerHTML = "<option value=''>No services</option>";
     yearSingleGoalBody.innerHTML = "";
     yearSingleGoalEmpty.style.display = "block";
-    yearSingleGoalEmpty.textContent = "Create active quantity/yes-no/floating goals before using yearly single-goal updates.";
+    yearSingleGoalEmpty.textContent = "Create active quantity/yes-no/floating goals before using yearly single-service updates.";
     yearSingleGoalSelectedId = "";
     return;
   }
@@ -12633,7 +12634,7 @@ function renderYearSingleGoalSection(standardTrackers) {
     yearSingleGoalForm.style.display = "none";
     yearSingleGoalBody.innerHTML = "";
     yearSingleGoalEmpty.style.display = "block";
-    yearSingleGoalEmpty.textContent = "Select a goal to view year entries.";
+    yearSingleGoalEmpty.textContent = "Select a service to view year entries.";
     return;
   }
 
@@ -12642,7 +12643,7 @@ function renderYearSingleGoalSection(standardTrackers) {
     yearSingleGoalForm.style.display = "none";
     yearSingleGoalBody.innerHTML = "";
     yearSingleGoalEmpty.style.display = "block";
-    yearSingleGoalEmpty.textContent = "Select a goal to view year entries.";
+    yearSingleGoalEmpty.textContent = "Select a service to view year entries.";
     return;
   }
 
@@ -12876,7 +12877,7 @@ function formatEntryGoalsPlusDetails(entry, tracker) {
   }
   if (goalsPlusEntry.mode === GOALS_PLUS_SETUP_GOLF) {
     const scoreText = goalsPlusEntry.score > 0 ? ` | Score ${formatAmount(goalsPlusEntry.score)}` : "";
-    return `Goals+ | ${formatGoalsPlusGolfType(goalsPlusEntry.golfType)}${scoreText}`;
+    return `Operations+ | ${formatGoalsPlusGolfType(goalsPlusEntry.golfType)}${scoreText}`;
   }
   const running = goalsPlusEntry;
   const intervalText = running.runningWorkout === "norwegian4x4" && running.workSpeed > 0 && running.recoverySpeed > 0
@@ -12899,7 +12900,7 @@ function formatEntryGoalsPlusDetails(entry, tracker) {
     }
   }
   const customExerciseText = customExerciseParts.length > 0 ? ` | ${customExerciseParts.join(" | ")}` : "";
-  return `Goals+ | ${formatRunningWorkout(running.runningWorkout)}${runMetricText}${intervalText}${customExerciseText}`;
+  return `Operations+ | ${formatRunningWorkout(running.runningWorkout)}${runMetricText}${intervalText}${customExerciseText}`;
 }
 
 function formatGoalTags(value) {
@@ -13529,11 +13530,11 @@ function updateEntryGoalsPlusGolfLabel(tracker) {
     return;
   }
   if (!isGoalsPlusGolfTracker(tracker)) {
-    entryGoalsPlusGolfNote.textContent = "Goals+ Golf Entry";
+    entryGoalsPlusGolfNote.textContent = "Operations+ Golf Entry";
     return;
   }
   const config = getGoalsPlusRunningConfig(tracker);
-  entryGoalsPlusGolfNote.textContent = `Goals+ ${formatGoalsPlusGolfType(config.golfType)} Entry`;
+  entryGoalsPlusGolfNote.textContent = `Operations+ ${formatGoalsPlusGolfType(config.golfType)} Entry`;
 }
 
 function syncEntryGoalsPlusWorkoutVisibility(workoutValue) {
@@ -13802,10 +13803,10 @@ function closeOutBucketGoal(trackerId, dateValue, notes = "") {
   }
   const tracker = trackers.find((item) => item.id === trackerId);
   if (!tracker || normalizeGoalType(tracker.goalType) !== "bucket") {
-    return { success: false, message: "Select a valid bucket goal." };
+    return { success: false, message: "Select a valid milestone service." };
   }
   if (tracker.archived) {
-    return { success: false, message: "Unarchive this bucket goal before closing it out." };
+    return { success: false, message: "Unarchive this milestone service before closing it out." };
   }
   if (!isDateKey(dateValue)) {
     return { success: false, message: "Select a valid close-out date." };
@@ -13839,10 +13840,10 @@ function reopenBucketGoal(trackerId, dateValue, notes = "") {
   }
   const tracker = trackers.find((item) => item.id === trackerId);
   if (!tracker || normalizeGoalType(tracker.goalType) !== "bucket") {
-    return { success: false, message: "Select a valid bucket goal." };
+    return { success: false, message: "Select a valid milestone service." };
   }
   if (tracker.archived) {
-    return { success: false, message: "Unarchive this bucket goal before reopening it." };
+    return { success: false, message: "Unarchive this milestone service before reopening it." };
   }
   if (!isDateKey(dateValue)) {
     return { success: false, message: "Select a valid reopen date." };

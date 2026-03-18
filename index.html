@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Teal Goal Tracker</title>
+  <title>Pest Control Operations</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
   <main id="main-content" class="page">
     <section id="auth-panel" class="panel auth-panel">
       <h2>Account Login</h2>
-      <p class="muted">Sign in to load your goal table, entries, schedules, and settings.</p>
+      <p class="muted">Sign in to load your operations dashboard, service entries, schedules, and settings.</p>
       <div class="auth-single">
         <div class="auth-switch" role="tablist" aria-label="Authentication mode">
           <button class="auth-switch-btn active" type="button" data-auth-mode="signin" aria-selected="true">Sign In</button>
@@ -79,7 +79,7 @@
     <div id="app-shell" hidden>
       <header class="hero">
         <div class="hero-top">
-          <button id="hero-home-btn" class="hero-title-btn menu-btn" type="button" data-tab="home">Placeholder Goal Tracker</button>
+          <button id="hero-home-btn" class="hero-title-btn menu-btn" type="button" data-tab="home">Pest Control Operations</button>
           <div class="hero-actions">
             <div class="user-actions-panel user-account-dropdown" data-dropdown>
               <button id="active-user-btn" class="btn btn-nav-compact btn-user-link" type="button" data-dropdown-toggle hidden></button>
@@ -110,7 +110,7 @@
               </div>
               <button id="logout-btn" class="btn" type="button">Logout</button>
               <div class="dropdown-menu user-account-menu">
-                <button class="menu-btn" type="button" data-tab="manage">Manage Goals</button>
+                <button class="menu-btn" type="button" data-tab="manage">Manage Services</button>
                 <button class="menu-btn" type="button" data-tab="social" data-social-section="friends">Friends</button>
                 <button class="menu-btn" type="button" data-tab="social" data-social-section="squads">Squads</button>
               </div>
@@ -137,8 +137,8 @@
           <div class="dropdown" data-dropdown>
             <button class="btn dropdown-toggle" type="button" data-dropdown-toggle>Planning</button>
             <div class="dropdown-menu">
-              <button class="menu-btn" type="button" data-tab="goal-schedule">Goal Schedule</button>
-              <button class="menu-btn" type="button" data-tab="goal-journal">Goal Journal</button>
+              <button class="menu-btn" type="button" data-tab="goal-schedule">Service Schedule</button>
+              <button class="menu-btn" type="button" data-tab="goal-journal">Service Notes</button>
             </div>
           </div>
 
@@ -151,7 +151,7 @@
               <button class="menu-btn" type="button" data-tab="year">Year</button>
               <button class="menu-btn" type="button" data-tab="quarter">Quarter</button>
               <button class="menu-btn" type="button" data-tab="trends">Trends</button>
-              <button class="menu-btn" type="button" data-tab="goals-plus">Goals+</button>
+              <button class="menu-btn" type="button" data-tab="goals-plus">Operations+</button>
               <button class="menu-btn" type="button" data-tab="bucket-list">Bucket List</button>
             </div>
           </div>
@@ -159,7 +159,7 @@
           <div class="dropdown" data-dropdown>
             <button class="btn dropdown-toggle" type="button" data-dropdown-toggle>Review</button>
             <div class="dropdown-menu">
-              <button class="menu-btn" type="button" data-tab="goal-journal">Goal Journal</button>
+              <button class="menu-btn" type="button" data-tab="goal-journal">Service Notes</button>
             </div>
           </div>
 
@@ -173,7 +173,7 @@
           <section class="snapshot-panel">
             <div class="snapshot-panel-head">
               <h3>Missed Entries</h3>
-              <p class="muted small">Goals missing updates in the current period.</p>
+              <p class="muted small">Services missing updates in the current period.</p>
             </div>
             <ul id="home-missed-list" class="card-list compact-list"></ul>
             <p id="home-missed-empty" class="empty-state">No missed entries right now.</p>
@@ -190,19 +190,19 @@
       </section>
 
       <section class="panel tab-panel active" data-tab-panel="manage">
-        <h2>Manage Goals</h2>
+        <h2>Manage Services</h2>
         <form id="goal-form" class="form-block">
           <div class="form-grid form-grid-3">
             <label>
               Setup Mode
               <select id="goal-setup-mode">
-                <option value="standard">Standard Goal</option>
-                <option value="goalsplus-running">Goals+</option>
+                <option value="standard">Standard Service</option>
+                <option value="goalsplus-running">Operations+</option>
               </select>
             </label>
             <label id="goal-name-text-label">
-              Goal Name
-              <input id="goal-name" type="text" maxlength="90" placeholder="Miles walked, pages read, sales calls..." required />
+              Service Name
+              <input id="goal-name" type="text" maxlength="90" placeholder="Termite inspections, mosquito services, rodent follow-ups..." required />
               <select id="goal-name-goals-plus" hidden disabled>
                 <option value="running">Running</option>
                 <option value="golf">Golf</option>
@@ -210,19 +210,19 @@
               </select>
             </label>
             <label>
-              Goal Type
+              Service Type
               <select id="goal-type">
-                <option value="quantity">Quantity Goal</option>
-                <option value="yesno">Yes/No Goal</option>
-                <option value="bucket">Bucket List Goal</option>
-                <option value="floating">Floating Goal</option>
+                <option value="quantity">Quantity Service</option>
+                <option value="yesno">Yes/No Service</option>
+                <option value="bucket">Milestone Service</option>
+                <option value="floating">Floating Service</option>
               </select>
             </label>
           </div>
-          <section id="goal-setup-wrap" class="progress-metrics-builder" aria-label="Goal setup">
+          <section id="goal-setup-wrap" class="progress-metrics-builder" aria-label="Service setup">
             <div class="snapshot-panel-head">
-              <h3>Goal Setup</h3>
-              <p class="muted small">Use Goals+ for running or golf/disc golf score tracking.</p>
+              <h3>Service Setup</h3>
+              <p class="muted small">Use Operations+ for running or golf/disc golf score tracking.</p>
             </div>
             <div class="form-grid form-grid-3 goals-plus-config-grid">
               <label id="goal-plus-running-workout-label" hidden>
@@ -249,45 +249,45 @@
                 <input id="goal-plus-running-recovery-interval" type="number" min="0.1" max="20" step="0.1" value="4.0" />
               </label>
             </div>
-            <p id="goal-plus-running-note" class="muted small" hidden>Running Goals+ entries include workout type, distance, and time with automatic pace and estimated VO2.</p>
+            <p id="goal-plus-running-note" class="muted small" hidden>Running Operations+ entries include workout type, distance, and time with automatic pace and estimated VO2.</p>
           </section>
-          <section id="goal-migrate-wrap" class="progress-metrics-builder" aria-label="Goal migration">
+          <section id="goal-migrate-wrap" class="progress-metrics-builder" aria-label="Service migration">
             <div class="snapshot-panel-head">
               <h3>Migration</h3>
-              <p class="muted small">Move tracking history from an existing goal into this new goal.</p>
+              <p class="muted small">Move tracking history from an existing service into this new service.</p>
             </div>
             <div class="form-grid form-grid-2">
               <label>
-                Migrate From Goal
+                Migrate From Service
                 <select id="goal-migrate-source">
                   <option value="">Don't migrate</option>
                 </select>
               </label>
               <label class="check-inline">
                 <input id="goal-migrate-archive-source" type="checkbox" checked />
-                Archive source goal after transfer
+                Archive source service after transfer
               </label>
             </div>
-            <p class="muted small">Transfers entries, schedules, and goal journal links.</p>
+            <p class="muted small">Transfers entries, schedules, and service note links.</p>
           </section>
           <div class="form-grid form-grid-3">
             <label>
               Unit
-              <input id="goal-unit" type="text" maxlength="20" placeholder="miles, pages, calls" required />
+              <input id="goal-unit" type="text" maxlength="20" placeholder="stops, inspections, treatments" required />
             </label>
             <label>
               Priority
               <input id="goal-priority" type="number" min="0" max="1000" value="0" />
             </label>
             <label>
-              Goal Tags
-              <input id="goal-tags" type="text" maxlength="140" placeholder="fitness, finance, health" />
+              Service Tags
+              <input id="goal-tags" type="text" maxlength="140" placeholder="termite, mosquito, monthly-route" />
             </label>
           </div>
           <section class="progress-metrics-builder" aria-label="Additional tracking">
             <div class="snapshot-panel-head">
               <h3>Additional Tracking</h3>
-              <p class="muted small">Turn on to add optional sub-metrics for this goal. Example: Max Reps (reps), Weight Lifted (lbs).</p>
+              <p class="muted small">Turn on to add optional sub-metrics for this service. Example: Max Reps (reps), Weight Lifted (lbs).</p>
             </div>
             <label class="check-inline">
               <input id="goal-additional-tracking-enabled" type="checkbox" />
@@ -297,11 +297,11 @@
               <div class="form-grid form-grid-3 progress-metrics-controls">
                 <label>
                   Metric Name
-                  <input id="goal-metric-name" type="text" maxlength="60" placeholder="Max Reps, Pages Read..." />
+                  <input id="goal-metric-name" type="text" maxlength="60" placeholder="Bait Stations, Callbacks, Re-treats..." />
                 </label>
                 <label>
                   Metric Unit
-                  <input id="goal-metric-unit" type="text" maxlength="20" placeholder="reps, lbs, pages" />
+                  <input id="goal-metric-unit" type="text" maxlength="20" placeholder="stations, visits, units" />
                 </label>
                 <div class="progress-metrics-actions">
                   <button id="goal-metric-add-btn" class="btn" type="button">Add Metric</button>
@@ -311,18 +311,18 @@
               <p id="goal-metrics-draft-empty" class="muted small">No additional tracking metrics yet.</p>
             </div>
           </section>
-          <p class="muted small goal-hint">Yes/No and Bucket List goals use completion entries. Floating goals track flexible, non-daily progress.</p>
+          <p class="muted small goal-hint">Yes/No and milestone services use completion entries. Floating services track flexible, non-daily progress.</p>
           <div class="form-grid form-grid-3">
             <label>
-              Weekly Goal
+              Weekly Target
               <input id="goal-weekly" type="number" min="0" max="1000000" value="0" required />
             </label>
             <label>
-              Monthly Goal
+              Monthly Target
               <input id="goal-monthly" type="number" min="0" max="1000000" value="0" required />
             </label>
             <label>
-              Yearly Goal
+              Yearly Target
               <input id="goal-yearly" type="number" min="0" max="1000000" value="0" required />
             </label>
           </div>
@@ -358,12 +358,12 @@
               <input id="goal-reward-yearly-points" type="number" min="0" max="1000000" value="10" />
             </label>
           </div>
-          <button class="btn btn-primary" type="submit">Add Goal</button>
+          <button class="btn btn-primary" type="submit">Add Service</button>
         </form>
 
         <form id="manage-goals-form" class="form-block">
           <div class="table-wrap">
-            <table id="manage-table" class="data-table" aria-label="Goals table">
+            <table id="manage-table" class="data-table" aria-label="Services table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -386,32 +386,32 @@
             </table>
           </div>
           <div class="actions">
-            <button id="manage-save-all" class="btn" type="submit">Save All Goals</button>
+            <button id="manage-save-all" class="btn" type="submit">Save All Services</button>
           </div>
         </form>
-        <p id="manage-empty" class="empty-state">No goals yet. Add your first goal above.</p>
+        <p id="manage-empty" class="empty-state">No services yet. Add your first service above.</p>
       </section>
 
       <section class="panel tab-panel" data-tab-panel="entry" hidden>
       <h2>Add Entry</h2>
-      <p class="muted">Choose how you want to log goal updates.</p>
+      <p class="muted">Choose how you want to log service updates.</p>
       <label class="inline-control entry-mode-control">
         Entry Mode
         <select id="entry-mode-select">
-          <option value="solo">Add Goal Entry</option>
+          <option value="solo">Add Service Entry</option>
           <option value="week">Week Update</option>
           <option value="update-all-year">Update All</option>
-          <option value="update-single-goal-year">Update Single Goal (Year)</option>
+          <option value="update-single-goal-year">Update Single Service (Year)</option>
         </select>
       </label>
 
       <section id="solo-entry-section">
       <h3>Solo Entry</h3>
-      <p class="muted">Log one goal update for one day.</p>
+      <p class="muted">Log one service update for one day.</p>
       <form id="entry-form" class="form-block">
         <div class="form-grid form-grid-3">
           <label>
-            Goal
+            Service
             <select id="entry-tracker"></select>
           </label>
           <label>
@@ -439,7 +439,7 @@
           <div id="entry-metrics-grid" class="form-grid form-grid-3"></div>
         </section>
         <section id="entry-goals-plus-running-wrap" class="entry-metrics-wrap" hidden>
-          <p class="muted small">Goals+ Running Entry</p>
+          <p class="muted small">Operations+ Running Entry</p>
           <div class="form-grid form-grid-3">
             <label>
               Workout
@@ -489,7 +489,7 @@
           <p id="entry-goals-plus-derived" class="muted small">Enter distance and time to calculate pace and estimated VO2.</p>
         </section>
         <section id="entry-goals-plus-golf-wrap" class="entry-metrics-wrap" hidden>
-          <p id="entry-goals-plus-golf-note" class="muted small">Goals+ Golf Entry</p>
+          <p id="entry-goals-plus-golf-note" class="muted small">Operations+ Golf Entry</p>
           <div class="form-grid form-grid-3">
             <label>
               Score
@@ -513,8 +513,8 @@
       <div class="panel-head week-update-head">
         <div>
           <h3>Week Update</h3>
-          <p class="muted">Update all goals across each day of the week in one place.</p>
-          <p class="muted small">Use "-" to clear a day. Yes/No goals use Yes/No selections automatically.</p>
+          <p class="muted">Update all services across each day of the week in one place.</p>
+          <p class="muted small">Use "-" to clear a day. Yes/No services use Yes/No selections automatically.</p>
         </div>
         <div class="panel-actions">
           <button id="week-entry-prev" class="btn btn-nav-compact" type="button">Prev</button>
@@ -534,7 +534,7 @@
           <button class="btn btn-primary" type="submit">Save Week Update</button>
         </div>
       </form>
-      <p id="week-entry-empty" class="empty-state">Create active goals before using Week Update.</p>
+      <p id="week-entry-empty" class="empty-state">Create active services before using Week Update.</p>
       <p id="week-entry-status" class="muted small"></p>
       </section>
 
@@ -542,7 +542,7 @@
       <div class="panel-head week-update-head">
         <div>
           <h3>Update All (Year)</h3>
-          <p class="muted">Edit all existing goal entries for the selected year.</p>
+          <p class="muted">Edit all existing service entries for the selected year.</p>
         </div>
         <div class="panel-actions">
           <button id="year-update-all-prev" class="btn btn-nav-compact" type="button">Prev</button>
@@ -557,7 +557,7 @@
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Goal</th>
+                <th>Service</th>
                 <th>Amount</th>
                 <th>Notes</th>
               </tr>
@@ -576,8 +576,8 @@
       <section id="year-single-goal-section" hidden>
       <div class="panel-head week-update-head">
         <div>
-          <h3>Update Single Goal (Year)</h3>
-          <p class="muted">Pick one goal and edit each year-to-date day. Use Status to leave no entry, set a value, or mark N/A.</p>
+          <h3>Update Single Service (Year)</h3>
+          <p class="muted">Pick one service and edit each year-to-date day. Use Status to leave no entry, set a value, or mark N/A.</p>
         </div>
         <div class="panel-actions">
           <button id="year-single-goal-prev" class="btn btn-nav-compact" type="button">Prev</button>
@@ -588,11 +588,11 @@
       </div>
       <form id="year-single-goal-form" class="form-block">
         <label class="inline-control">
-          Goal
+          Service
           <select id="year-single-goal-select"></select>
         </label>
         <div class="table-wrap">
-          <table class="data-table" aria-label="Single goal year-to-date entries">
+          <table class="data-table" aria-label="Single service year-to-date entries">
             <thead>
               <tr>
                 <th>Date</th>
@@ -605,10 +605,10 @@
           </table>
         </div>
         <div class="actions">
-          <button class="btn btn-primary" type="submit">Save Goal Year Updates</button>
+          <button class="btn btn-primary" type="submit">Save Service Year Updates</button>
         </div>
       </form>
-      <p id="year-single-goal-empty" class="empty-state">No year-to-date rows for this goal.</p>
+      <p id="year-single-goal-empty" class="empty-state">No year-to-date rows for this service.</p>
       <p id="year-single-goal-status" class="muted small"></p>
       </section>
 
@@ -616,14 +616,14 @@
 
       <section class="panel tab-panel" data-tab-panel="missed-entries" hidden>
       <h2>Missed Entries</h2>
-      <p class="muted">Every date missing goal entries, plus past periods that have not been closed out yet.</p>
+      <p class="muted">Every date missing service entries, plus past periods that have not been closed out yet.</p>
       <ul id="missed-entries-list" class="card-list compact-list"></ul>
       <p id="missed-entries-empty" class="empty-state">No missed entries right now.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="goal-journal" hidden>
-      <h2>Goal Journal</h2>
-      <p class="muted">Capture progress notes, blockers, and reflections tied to goals.</p>
+      <h2>Service Notes</h2>
+      <p class="muted">Capture progress notes, blockers, and reflections tied to services.</p>
       <form id="goal-journal-form" class="form-block">
         <div class="form-grid form-grid-3">
           <label>
@@ -631,7 +631,7 @@
             <input id="goal-journal-date" type="date" required />
           </label>
           <label>
-            Goal (Optional)
+            Service (Optional)
             <select id="goal-journal-goal"></select>
           </label>
           <label>
@@ -655,11 +655,11 @@
 
       <section class="panel tab-panel" data-tab-panel="bucket-entry" hidden>
       <h2>Bucket List Entry</h2>
-      <p class="muted">Close out bucket list goals when completed.</p>
+      <p class="muted">Close out milestone services when completed.</p>
       <form id="bucket-entry-form" class="form-block">
         <div class="form-grid form-grid-3">
           <label>
-            Bucket Goal
+            Milestone Service
             <select id="bucket-entry-goal"></select>
           </label>
           <label>
@@ -675,12 +675,12 @@
           Notes
           <textarea id="bucket-entry-notes" rows="2" maxlength="280" placeholder="Optional close-out note"></textarea>
         </label>
-        <button class="btn btn-primary" type="submit">Close Out Bucket Goal</button>
+        <button class="btn btn-primary" type="submit">Close Out Milestone Service</button>
       </form>
 
       <h3>Recent Bucket Close-Outs</h3>
       <ul id="recent-bucket-entries-list" class="card-list compact-list"></ul>
-      <p id="recent-bucket-entries-empty" class="empty-state">No bucket goals have been closed yet.</p>
+      <p id="recent-bucket-entries-empty" class="empty-state">No milestone services have been closed yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="checkin-entry" hidden>
@@ -719,10 +719,10 @@
       <div class="panel-head">
         <div>
           <h2>Entry List</h2>
-          <p class="muted">Every goal entry you have logged. Edit date, goal, quantity/value, and notes or delete rows.</p>
+          <p class="muted">Every service entry you have logged. Edit date, service, quantity/value, and notes or delete rows.</p>
         </div>
         <label class="inline-control">
-          Goal Type
+          Service Type
           <select id="entry-list-type-filter">
             <option value="all">All Types</option>
             <option value="quantity">Quantity</option>
@@ -732,7 +732,7 @@
           </select>
         </label>
         <label class="inline-control">
-          Goal Status
+          Service Status
           <select id="entry-list-status-filter">
             <option value="active">Active</option>
             <option value="all">All</option>
@@ -751,7 +751,7 @@
           Sort
           <select id="entry-list-sort">
             <option value="date_desc">Newest Date</option>
-            <option value="goal_asc">Goal A-Z</option>
+            <option value="goal_asc">Service A-Z</option>
           </select>
         </label>
       </div>
@@ -766,7 +766,7 @@
       <section class="panel tab-panel" data-tab-panel="entry-csv" hidden>
       <h2>CSV Import/Export</h2>
       <p class="muted">Import entries from CSV or export your entries in the same layout.</p>
-      <p class="muted small">Format: A1 = Date, B1/C1/D1... = goal names, A2:A = dates, B2:B/C2:C... = amounts.</p>
+      <p class="muted small">Format: A1 = Date, B1/C1/D1... = service names, A2:A = dates, B2:B/C2:C... = amounts.</p>
       <form id="csv-upload-form" class="form-block">
         <label>
           CSV File
@@ -782,7 +782,7 @@
 
       <section class="panel tab-panel" data-tab-panel="goal-schedule" hidden>
       <div class="panel-head">
-        <h2>Goal Schedule</h2>
+        <h2>Service Schedule</h2>
         <div class="panel-actions">
           <button id="schedule-prev-week" class="btn btn-nav-compact" type="button">Prev</button>
           <button id="schedule-this-week" class="btn btn-nav-compact" type="button">This</button>
@@ -796,7 +796,7 @@
         <form id="schedule-form" class="form-block">
           <div class="form-grid form-grid-4">
             <label>
-              Goal
+              Service
               <select id="schedule-goal"></select>
             </label>
             <label>
@@ -846,7 +846,7 @@
               </div>
               <div class="view-filters-grid">
                 <label class="inline-control">
-                  Goal Type
+                  Service Type
                   <select id="week-goal-type-filter">
                     <option value="all">All Types</option>
                     <option value="quantity">Quantity</option>
@@ -856,7 +856,7 @@
                   </select>
                 </label>
                 <label class="inline-control">
-                  Goal Status
+                  Service Status
                   <select id="week-goal-status-filter">
                     <option value="active">Active</option>
                     <option value="all">All</option>
@@ -877,7 +877,7 @@
       </div>
       <div id="week-summary" class="summary-grid"></div>
       <div id="week-list" class="view-accordion"></div>
-      <p id="week-empty" class="empty-state">No goals or check-ins yet.</p>
+      <p id="week-empty" class="empty-state">No services or check-ins yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="month" hidden>
@@ -899,7 +899,7 @@
               </div>
               <div class="view-filters-grid">
                 <label class="inline-control">
-                  Goal Type
+                  Service Type
                   <select id="month-goal-type-filter">
                     <option value="all">All Types</option>
                     <option value="quantity">Quantity</option>
@@ -909,7 +909,7 @@
                   </select>
                 </label>
                 <label class="inline-control">
-                  Goal Status
+                  Service Status
                   <select id="month-goal-status-filter">
                     <option value="active">Active</option>
                     <option value="all">All</option>
@@ -930,7 +930,7 @@
       </div>
       <div id="month-summary" class="summary-grid"></div>
       <div id="month-list" class="view-accordion"></div>
-      <p id="month-empty" class="empty-state">No goals or check-ins yet.</p>
+      <p id="month-empty" class="empty-state">No services or check-ins yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="year" hidden>
@@ -952,7 +952,7 @@
               </div>
               <div class="view-filters-grid">
                 <label class="inline-control">
-                  Goal Type
+                  Service Type
                   <select id="year-goal-type-filter">
                     <option value="all">All Types</option>
                     <option value="quantity">Quantity</option>
@@ -962,7 +962,7 @@
                   </select>
                 </label>
                 <label class="inline-control">
-                  Goal Status
+                  Service Status
                   <select id="year-goal-status-filter">
                     <option value="active">Active</option>
                     <option value="all">All</option>
@@ -983,7 +983,7 @@
       </div>
       <div id="year-summary" class="summary-grid"></div>
       <div id="year-list" class="view-accordion"></div>
-      <p id="year-empty" class="empty-state">No goals or check-ins yet.</p>
+      <p id="year-empty" class="empty-state">No services or check-ins yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="quarter" hidden>
@@ -1005,7 +1005,7 @@
               </div>
               <div class="view-filters-grid">
                 <label class="inline-control">
-                  Goal Type
+                  Service Type
                   <select id="quarter-goal-type-filter">
                     <option value="all">All Types</option>
                     <option value="quantity">Quantity</option>
@@ -1015,7 +1015,7 @@
                   </select>
                 </label>
                 <label class="inline-control">
-                  Goal Status
+                  Service Status
                   <select id="quarter-goal-status-filter">
                     <option value="active">Active</option>
                     <option value="all">All</option>
@@ -1036,7 +1036,7 @@
       </div>
       <div id="quarter-summary" class="summary-grid"></div>
       <div id="quarter-list" class="view-accordion"></div>
-      <p id="quarter-empty" class="empty-state">No goals or check-ins yet.</p>
+      <p id="quarter-empty" class="empty-state">No services or check-ins yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="trends" hidden>
@@ -1075,13 +1075,13 @@
       <section class="panel tab-panel" data-tab-panel="goals-plus" hidden>
       <div class="panel-head">
         <div>
-          <h2>Goals+ View</h2>
-          <p class="muted">Hover Goals+ to review running and golf stats.</p>
+          <h2>Operations+ View</h2>
+          <p class="muted">Hover Operations+ to review running and golf stats.</p>
         </div>
       </div>
       <div id="goals-plus-summary" class="summary-grid"></div>
       <ul id="goals-plus-list" class="card-list"></ul>
-      <p id="goals-plus-empty" class="empty-state">No Goals+ goals yet.</p>
+      <p id="goals-plus-empty" class="empty-state">No Operations+ services yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="bucket-list" hidden>
@@ -1089,7 +1089,7 @@
         <h2>Bucket List View</h2>
         <div class="panel-actions">
           <label class="inline-control">
-            Goal Status
+            Service Status
             <select id="bucket-list-goal-status-filter">
               <option value="active">Active</option>
               <option value="all">All</option>
@@ -1108,7 +1108,7 @@
       </div>
       <div id="bucket-list-summary" class="summary-grid"></div>
       <ul id="bucket-list-view-list" class="card-list"></ul>
-      <p id="bucket-list-view-empty" class="empty-state">No bucket list goals yet.</p>
+      <p id="bucket-list-view-empty" class="empty-state">No milestone services yet.</p>
     </section>
 
       <section class="panel tab-panel" data-tab-panel="point-store" hidden>
@@ -1191,10 +1191,10 @@
       <section class="snapshot-panel">
         <div class="snapshot-panel-head">
           <h3>Setup</h3>
-          <p class="muted small">Manage your goals and check-ins.</p>
+          <p class="muted small">Manage your services and check-ins.</p>
         </div>
         <div class="actions">
-          <button class="btn" type="button" data-action="jump-tab" data-tab-target="manage">Manage Goals</button>
+          <button class="btn" type="button" data-action="jump-tab" data-tab-target="manage">Manage Services</button>
           <button class="btn" type="button" data-action="jump-tab" data-tab-target="checkins">Manage Check-ins</button>
         </div>
       </section>
@@ -1337,7 +1337,7 @@
       <section id="restore-section" class="snapshot-panel">
         <div class="snapshot-panel-head">
           <h3>Undo / Restore</h3>
-          <p class="muted small">Restore recently deleted goals, check-ins, and entries.</p>
+          <p class="muted small">Restore recently deleted services, check-ins, and entries.</p>
         </div>
         <ul id="trash-list" class="card-list compact-list"></ul>
         <p id="trash-empty" class="empty-state">No deleted items.</p>
@@ -1425,8 +1425,8 @@
       </section>
       <section id="squad-settings-section" class="snapshot-panel">
         <div class="snapshot-panel-head">
-          <h3>Squad Goals</h3>
-          <p class="muted small">Create shared squads where friends track goals together.</p>
+          <h3>Squad Services</h3>
+          <p class="muted small">Create shared squads where friends track services together.</p>
         </div>
         <form id="squad-form" class="form-block">
           <div class="form-grid form-grid-3">
@@ -1439,7 +1439,7 @@
               <input id="squad-notes" type="text" maxlength="160" placeholder="Optional squad purpose" />
             </label>
             <label>
-              Weekly Goal
+              Weekly Target
               <input id="squad-weekly-goal" type="number" min="0" max="1000000" value="0" />
             </label>
           </div>
@@ -1477,7 +1477,7 @@
           </div>
           <div class="graph-modal-body">
             <ol class="simple-list">
-              <li>Add goals in Manage Goals.</li>
+              <li>Add services in Manage Services.</li>
               <li>Log updates in Add Entry.</li>
               <li>Review pace in Week/Month/Year views.</li>
               <li>Close out periods to lock snapshots and reward points.</li>

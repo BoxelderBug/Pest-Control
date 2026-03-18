@@ -1,26 +1,17 @@
 {
-  "name": "goal-tracker",
+  "name": "pest-control",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
+  "private": true,
+  "description": "Static pest control operations app deployed on Vercel.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BoxelderBug/Goal-Tracker.git"
+    "url": "git+https://github.com/BoxelderBug/Pest-Control.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/BoxelderBug/Goal-Tracker/issues"
+    "url": "https://github.com/BoxelderBug/Pest-Control/issues"
   },
-  "homepage": "https://github.com/BoxelderBug/Goal-Tracker#readme",
-  "dependencies": {
-    "express": "^5.2.1"
-  }
+  "homepage": "https://github.com/BoxelderBug/Pest-Control#readme"
 }
