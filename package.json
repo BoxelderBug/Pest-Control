@@ -2,7 +2,7 @@
   "name": "pest-control",
   "version": "1.0.0",
   "private": true,
-  "description": "Static pest control operations app deployed on Vercel.",
+  "description": "Fresh static pest control starter app for Vercel.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BoxelderBug/Pest-Control.git"
