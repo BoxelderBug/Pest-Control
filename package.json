@@ -1,26 +1,19 @@
 {
-  "name": "goal-tracker",
+  "name": "pest-control-simulator",
   "version": "1.0.0",
-  "description": "",
+  "description": "Browser-based pest control technician simulator",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/BoxelderBug/Goal-Tracker.git"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/BoxelderBug/Goal-Tracker/issues"
-  },
-  "homepage": "https://github.com/BoxelderBug/Goal-Tracker#readme",
   "dependencies": {
+    "dotenv": "^17.3.1",
     "express": "^5.2.1"
   }
 }
