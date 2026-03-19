@@ -1,4 +1,5 @@
 const canvas = document.querySelector("#game-canvas");
+const worldViewport = document.querySelector("#world-viewport");
 const statusLine = document.querySelector("#status-line");
 const hintLine = document.querySelector("#hint-line");
 const dashboard = document.querySelector("#dashboard");
@@ -1091,6 +1092,7 @@ const state = {
   currentSpeedLimitMph: 25,
   speedLimiterActive: false,
   roadLockEnabled: false,
+  driveCameraYawOffset: 0,
   targetDriveSpeedMph: 20,
   cruiseEnabled: false,
   phoneOpen: false,
@@ -1164,6 +1166,84 @@ const touchInput = {
 };
 
 let dayProgressAutosaveTimer = 0;
+let neighborhoodRenderer = null;
+let rendererLoadAttempted = false;
+let rendererVisible = false;
+
+function setNeighborhoodRendererVisible(visible) {
+  if (!worldViewport) {
+    return;
+  }
+  const nextVisible = Boolean(visible && neighborhoodRenderer);
+  if (rendererVisible === nextVisible) {
+    return;
+  }
+  rendererVisible = nextVisible;
+  worldViewport.hidden = !nextVisible;
+}
+
+function buildNeighborhoodRendererFrame() {
+  return {
+    player,
+    truck,
+    trainerFollower: state.trainerFollower,
+    trainerMode: state.trainerMode,
+    inTruck: state.inTruck,
+    mapOpen: state.mapOpen,
+    firstPersonActive: state.firstPerson.active && !state.mapOpen,
+    phase: state.phase,
+    serviceComplete: state.serviceComplete,
+    driveCameraYawOffset: state.driveCameraYawOffset,
+    currentWaypoint: state.currentWaypoint,
+    noSprayZones: state.noSprayZones,
+    timeMs: state.timeMs
+  };
+}
+
+function resizeNeighborhoodRenderer(dpr = window.devicePixelRatio || 1) {
+  if (!neighborhoodRenderer) {
+    return;
+  }
+  neighborhoodRenderer.resize(view.width, view.height, dpr);
+}
+
+function renderThreeNeighborhood() {
+  if (!neighborhoodRenderer) {
+    setNeighborhoodRendererVisible(false);
+    return false;
+  }
+  neighborhoodRenderer.render(buildNeighborhoodRendererFrame());
+  setNeighborhoodRendererVisible(true);
+  return true;
+}
+
+async function loadNeighborhoodRenderer() {
+  if (rendererLoadAttempted || !worldViewport) {
+    return;
+  }
+  rendererLoadAttempted = true;
+
+  try {
+    const { createNeighborhoodRenderer } = await import("./three-renderer.js");
+    neighborhoodRenderer = createNeighborhoodRenderer({
+      mount: worldViewport,
+      world,
+      roads,
+      houses,
+      route,
+      parkingSpot,
+      houseParkingSpots,
+      targetDoorZone
+    });
+    resizeNeighborhoodRenderer(window.devicePixelRatio || 1);
+  } catch (error) {
+    neighborhoodRenderer = null;
+    setNeighborhoodRendererVisible(false);
+    if (typeof console !== "undefined" && typeof console.warn === "function") {
+      console.warn("Three.js renderer unavailable, falling back to canvas rendering.", error);
+    }
+  }
+}
 
 function resetGameplayInputs() {
   input.up = false;
@@ -1560,6 +1640,22 @@ function updatePointerFromEvent(event) {
   state.pointer.x = clamp(x, 0, rect.width);
   state.pointer.y = clamp(y, 0, rect.height);
   state.pointer.insideCanvas = true;
+}
+
+function setDriveCameraViewFromPointer() {
+  if (!state.inTruck || state.mapOpen || view.width <= 0) {
+    return;
+  }
+  const normalizedX = clamp((state.pointer.x / view.width) * 2 - 1, -1, 1);
+  const deadzone = 0.08;
+  if (Math.abs(normalizedX) <= deadzone) {
+    state.driveCameraYawOffset = 0;
+    return;
+  }
+  const adjusted = normalizedX > 0
+    ? (normalizedX - deadzone) / (1 - deadzone)
+    : (normalizedX + deadzone) / (1 - deadzone);
+  state.driveCameraYawOffset = adjusted * (Math.PI * 0.78);
 }
 
 function clamp(value, min, max) {
@@ -4413,7 +4509,10 @@ function tryEnterTruck() {
   }
   if (nearDoor) {
     state.inTruck = true;
-    setCruiseEnabled(false);
+    if (state.targetDriveSpeedMph <= 0) {
+      setTargetDriveSpeed(20);
+    }
+    setCruiseEnabled(true);
     state.vehicleDoors.driver = false;
     if (state.phase === "walk_to_truck") {
       state.phase = "drive_to_stop";
@@ -4473,6 +4572,27 @@ function setKeyState(event, isDown) {
     setRoadLockEnabled(!state.roadLockEnabled);
     event.preventDefault();
     return;
+  }
+  if (isDown && !event.repeat && code === "KeyQ") {
+    if (state.inTruck && !state.mapOpen) {
+      state.driveCameraYawOffset = wrapAngle(state.driveCameraYawOffset - Math.PI / 4);
+      event.preventDefault();
+      return;
+    }
+  }
+  if (isDown && !event.repeat && code === "KeyF") {
+    if (state.inTruck && !state.mapOpen) {
+      state.driveCameraYawOffset = wrapAngle(state.driveCameraYawOffset + Math.PI / 4);
+      event.preventDefault();
+      return;
+    }
+  }
+  if (isDown && !event.repeat && code === "KeyR") {
+    if (state.inTruck && !state.mapOpen) {
+      state.driveCameraYawOffset = 0;
+      event.preventDefault();
+      return;
+    }
   }
   if (isDown && !event.repeat && (code === "BracketRight" || code === "Equal")) {
     adjustTargetDriveSpeed(1, { engageCruise: true });
@@ -4672,9 +4792,11 @@ function applyTruckPhysics(dt) {
   }
 
   if (manualThrottle < -0.08) {
-    truck.speed += acceleration * manualThrottle * dt;
+    const directionChangeBoost = truck.speed > 0 ? 1.8 : 1;
+    truck.speed += acceleration * manualThrottle * dt * directionChangeBoost;
   } else if (manualThrottle > 0.08) {
-    truck.speed += acceleration * manualThrottle * dt;
+    const directionChangeBoost = truck.speed < 0 ? 1.8 : 1;
+    truck.speed += acceleration * manualThrottle * dt * directionChangeBoost;
   }
 
   truck.speed = clamp(truck.speed, -maxReverse, maxForward);
@@ -6052,6 +6174,13 @@ function drawHouses() {
     ctx.lineWidth = 1.3;
     ctx.strokeRect(house.x, house.y, house.w, house.h);
 
+    // Foundation strip at base
+    ctx.fillStyle = "#b8bec5";
+    ctx.fillRect(house.x - 2, house.y + house.h - 6, house.w + 4, 8);
+    ctx.strokeStyle = "rgba(90, 100, 110, 0.5)";
+    ctx.lineWidth = 0.7;
+    ctx.strokeRect(house.x - 2, house.y + house.h - 6, house.w + 4, 8);
+
     ctx.strokeStyle = colorWithAlpha(house.color, 0.42);
     ctx.lineWidth = 0.8;
     for (let y = house.y + 12; y < house.y + house.h - 6; y += 12) {
@@ -6132,6 +6261,27 @@ function drawHouses() {
     drawWindow(leftWindow);
     drawWindow(rightWindow);
 
+    // Flower boxes under windows
+    const _drawFlowerBox = (rect) => {
+      ctx.fillStyle = "#6b3c1e";
+      ctx.fillRect(rect.x - 2, rect.y + rect.h + 1, rect.w + 4, 5);
+      ctx.strokeStyle = "#4a2810";
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(rect.x - 2, rect.y + rect.h + 1, rect.w + 4, 5);
+      const flowerColors = ["#e84b6a", "#f97316", "#fbbf24", "#e84b6a", "#f97316"];
+      for (let _fi = 0; _fi < 5; _fi++) {
+        const _fx = rect.x - 1 + (_fi / 4) * (rect.w + 2);
+        ctx.fillStyle = "#4a8c3a";
+        ctx.fillRect(_fx - 0.5, rect.y + rect.h - 1, 1, 3);
+        ctx.fillStyle = flowerColors[_fi % flowerColors.length];
+        ctx.beginPath();
+        ctx.arc(_fx, rect.y + rect.h - 1, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    _drawFlowerBox(leftWindow);
+    _drawFlowerBox(rightWindow);
+
     if (garageRect) {
       const garageGrad = ctx.createLinearGradient(garageRect.x, garageRect.y, garageRect.x, garageRect.y + garageRect.h);
       garageGrad.addColorStop(0, "#d6dbe0");
@@ -6180,6 +6330,19 @@ function drawHouses() {
     ctx.fillStyle = "#b4b8bd";
     ctx.fillRect(door.x - 8, door.y + door.h, door.w + 16, 5);
     ctx.fillRect(door.x + door.w / 2 - 4, house.y + house.h, 8, 24);
+
+    // Mailbox near front path
+    const _mbX = house.x + house.w - 14;
+    const _mbY = house.y + house.h + 18;
+    ctx.fillStyle = "#7a8390";
+    ctx.fillRect(_mbX, _mbY - 1, 1.5, 8);
+    ctx.fillStyle = shadeColor(house.color, 0.08);
+    ctx.fillRect(_mbX - 4, _mbY - 6, 10, 5);
+    ctx.strokeStyle = shadeColor(house.color, -0.18);
+    ctx.lineWidth = 0.8;
+    ctx.strokeRect(_mbX - 4, _mbY - 6, 10, 5);
+    ctx.fillStyle = "rgba(200,220,240,0.7)";
+    ctx.fillRect(_mbX + 2, _mbY - 5.5, 2, 1);
 
     const houseNumber = getHouseNumber(house, index);
     const plaqueW = Math.max(36, houseNumber.length * 9 + 14);
@@ -6628,18 +6791,87 @@ function drawPlayer() {
   ctx.ellipse(0, 11, 11, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#c9252f";
-  ctx.fillRect(-9, -7, 18, 12);
-  ctx.fillStyle = "#141518";
-  ctx.fillRect(-9, 5, 18, 10);
-  ctx.fillStyle = "#111317";
-  ctx.fillRect(-9, 15, 7, 4);
-  ctx.fillRect(2, 15, 7, 4);
-
+  // Arms
+  const _armGrad = ctx.createLinearGradient(-16, -5, 16, 5);
+  _armGrad.addColorStop(0, "#a81e27");
+  _armGrad.addColorStop(1, "#c9252f");
+  ctx.fillStyle = _armGrad;
+  ctx.beginPath();
+  ctx.moveTo(-9, -5); ctx.lineTo(-9, 1); ctx.lineTo(-16, 4); ctx.lineTo(-15, -3); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(9, -5); ctx.lineTo(9, 1); ctx.lineTo(16, 4); ctx.lineTo(15, -3); ctx.closePath(); ctx.fill();
+  // Hands
   ctx.fillStyle = "#f5c89c";
+  ctx.beginPath(); ctx.arc(-15.5, 4.5, 2.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(15.5, 4.5, 2.2, 0, Math.PI * 2); ctx.fill();
+
+  // Torso (uniform shirt with gradient)
+  const _torsoGrad = ctx.createLinearGradient(-9, -7, 9, 5);
+  _torsoGrad.addColorStop(0, "#d42a35");
+  _torsoGrad.addColorStop(1, "#a31c26");
+  ctx.fillStyle = _torsoGrad;
+  ctx.beginPath();
+  ctx.moveTo(-9, -3); ctx.quadraticCurveTo(-9, -7, -5, -7);
+  ctx.lineTo(5, -7); ctx.quadraticCurveTo(9, -7, 9, -3);
+  ctx.lineTo(9, 5); ctx.lineTo(-9, 5); ctx.closePath();
+  ctx.fill();
+  // Shirt sheen
+  ctx.fillStyle = "rgba(255,255,255,0.13)";
+  ctx.fillRect(-7, -6, 7, 3);
+  // V-collar
+  ctx.fillStyle = "#f0f0f0";
+  ctx.beginPath();
+  ctx.moveTo(-3.5, -7); ctx.lineTo(3.5, -7); ctx.lineTo(1, -4); ctx.lineTo(0, -3); ctx.lineTo(-1, -4); ctx.closePath();
+  ctx.fill();
+  // Chest logo badge
+  ctx.fillStyle = "rgba(255,255,255,0.22)";
+  ctx.beginPath(); ctx.arc(-3, -1.5, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.78)";
+  ctx.font = "bold 4px sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("P", -3, -1.5);
+
+  // Belt
+  ctx.fillStyle = "#221a0c";
+  ctx.fillRect(-9, 5, 18, 2);
+  ctx.fillStyle = "#c8a44a";
+  ctx.fillRect(-2.5, 4.5, 5, 3);
+
+  // Pants with gradient and crease
+  const _pantsGrad = ctx.createLinearGradient(-9, 7, 9, 15);
+  _pantsGrad.addColorStop(0, "#1a1f27");
+  _pantsGrad.addColorStop(1, "#0e1216");
+  ctx.fillStyle = _pantsGrad;
+  ctx.fillRect(-9, 7, 18, 8);
+  ctx.strokeStyle = "rgba(255,255,255,0.07)";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(-2, 8); ctx.lineTo(-2, 15); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(2, 8); ctx.lineTo(2, 15); ctx.stroke();
+
+  // Boots
+  ctx.fillStyle = "#1a1308";
+  ctx.fillRect(-9, 15, 7.5, 5);
+  ctx.fillRect(1.5, 15, 7.5, 5);
+  // Boot toes (rounded)
+  ctx.fillStyle = "#241c0f";
+  ctx.beginPath(); ctx.ellipse(-5.3, 20, 3.8, 1.7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(5.3, 20, 3.8, 1.7, 0, 0, Math.PI * 2); ctx.fill();
+  // Boot sheen
+  ctx.fillStyle = "rgba(255,255,255,0.09)";
+  ctx.fillRect(-8.5, 15.5, 6, 1.8);
+  ctx.fillRect(2, 15.5, 6, 1.8);
+
+  // Head with skin gradient
+  const _headGrad = ctx.createRadialGradient(-1.5, -13, 1, 0, -11, 7);
+  _headGrad.addColorStop(0, "#fad4a8");
+  _headGrad.addColorStop(1, "#e8a870");
+  ctx.fillStyle = _headGrad;
   ctx.beginPath();
   ctx.arc(0, -11, 7, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = "rgba(160,100,50,0.28)";
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
   drawBallCap(0, -11, { color: "#b6121e", scale: 1, brimDirection: 1 });
 
   if (state.hasWebster && (state.phase === "webster_working" || state.phase === "webster_pickup")) {
@@ -6743,6 +6975,17 @@ function drawTruck() {
     ctx.arc(wheel.x, wheel.y, 4.5, 0, Math.PI * 2);
     ctx.fill();
 
+    // Wheel spokes
+    ctx.strokeStyle = "#6a7e8c";
+    ctx.lineWidth = 1;
+    for (let _s = 0; _s < 5; _s++) {
+      const _sa = (_s / 5) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(wheel.x, wheel.y);
+      ctx.lineTo(wheel.x + Math.cos(_sa) * 3.8, wheel.y + Math.sin(_sa) * 3.8);
+      ctx.stroke();
+    }
+    // Center cap
     ctx.fillStyle = "#8fa0ad";
     ctx.beginPath();
     ctx.arc(wheel.x, wheel.y, 1.5, 0, Math.PI * 2);
@@ -6780,6 +7023,29 @@ function drawTruck() {
   ctx.fillRect(10, -20, 2, 40);
   ctx.fillStyle = "rgba(115, 15, 22, 0.52)";
   ctx.fillRect(24, -19, 2, 38);
+
+  // Company name on cargo side
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.88)";
+  ctx.font = "bold 7px 'Space Grotesk', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("PEST PRO", -22, -8);
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.font = "500 5px 'Space Grotesk', sans-serif";
+  ctx.fillText("SERVICES", -22, 0);
+  ctx.restore();
+
+  // Roof rack bars over cab area
+  ctx.fillStyle = "#5a6068";
+  ctx.fillRect(16, -20, 8, 2);
+  ctx.fillRect(16, 18, 8, 2);
+  ctx.fillStyle = "#6a737c";
+  ctx.fillRect(18, -20, 2, 40);
+  ctx.fillRect(22, -20, 2, 40);
+  // Rack cross-bar highlight
+  ctx.fillStyle = "rgba(200,220,230,0.25)";
+  ctx.fillRect(18, -20, 6, 1);
 
   ctx.fillStyle = "#b61f2a";
   ctx.beginPath();
@@ -7650,36 +7916,40 @@ function drawDingOverlay() {
 function render() {
   ctx.clearRect(0, 0, view.width, view.height);
   if (state.firstPerson.active && !state.mapOpen) {
+    setNeighborhoodRendererVisible(false);
     drawFirstPersonView();
   } else {
-    ctx.fillStyle = "#bcd89a";
-    ctx.fillRect(0, 0, view.width, view.height);
+    const renderedThree = renderThreeNeighborhood();
+    if (!renderedThree) {
+      ctx.fillStyle = "#bcd89a";
+      ctx.fillRect(0, 0, view.width, view.height);
 
-    ctx.save();
-    applyWorldCameraTransform();
+      ctx.save();
+      applyWorldCameraTransform();
 
-    drawGround();
-    roads.forEach(drawRoad);
-    drawSpeedLimitSigns();
-    drawStreetNameSigns();
-    drawHouses();
-    drawNoSprayZones();
-    drawPremierBarrierTargets();
-    drawRoute();
-    drawParkingSpot();
-    drawHouseParkingSpots();
-    drawVehicleDoorAccessZones();
-    drawDoorCheckInZone();
-    drawWebsterPickupZone();
-    drawWebTargets();
-    drawActiveServiceSideHighlight();
-    drawTrainerFollower();
-    drawPlayer();
-    drawSprayerRig();
-    drawTruck();
-    drawMapBoundaries();
+      drawGround();
+      roads.forEach(drawRoad);
+      drawSpeedLimitSigns();
+      drawStreetNameSigns();
+      drawHouses();
+      drawNoSprayZones();
+      drawPremierBarrierTargets();
+      drawRoute();
+      drawParkingSpot();
+      drawHouseParkingSpots();
+      drawVehicleDoorAccessZones();
+      drawDoorCheckInZone();
+      drawWebsterPickupZone();
+      drawWebTargets();
+      drawActiveServiceSideHighlight();
+      drawTrainerFollower();
+      drawPlayer();
+      drawSprayerRig();
+      drawTruck();
+      drawMapBoundaries();
 
-    ctx.restore();
+      ctx.restore();
+    }
   }
 
   drawGpsPanel();
@@ -7705,6 +7975,7 @@ function resizeCanvas() {
     state.pointer.x = clamp(state.pointer.x, 0, rect.width);
     state.pointer.y = clamp(state.pointer.y, 0, rect.height);
   }
+  resizeNeighborhoodRenderer(dpr);
 }
 
 function update(dt) {
@@ -7788,6 +8059,7 @@ function tick(now) {
 
 function init() {
   resizeCanvas();
+  loadNeighborhoodRenderer();
   attachTouchControls();
   setTrainerMode(false);
   setCustomerAiMode(false);
@@ -8030,6 +8302,12 @@ function init() {
   canvas.addEventListener("mousedown", (event) => {
     updatePointerFromEvent(event);
     if (event.button === 0) {
+      if (state.inTruck && !state.mapOpen) {
+        setDriveCameraViewFromPointer();
+        input.spray = false;
+        event.preventDefault();
+        return;
+      }
       if (state.phase === "webster_working" && state.firstPerson.active && !state.mapOpen) {
         input.spray = false;
         tryKnockDownWebAtPointer();

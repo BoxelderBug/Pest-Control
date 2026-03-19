@@ -20,6 +20,7 @@
     </header>
 
     <section class="play-card" aria-label="Game area">
+      <div id="world-viewport" class="world-viewport" aria-hidden="true" hidden></div>
       <canvas id="game-canvas" aria-label="Top-down residential map"></canvas>
       <section id="safety-disclaimer-screen" class="safety-disclaimer-screen" aria-label="Safety disclaimer">
         <div class="safety-disclaimer-card">
@@ -152,6 +153,7 @@
               <p><strong>Cruise Speed:</strong> Phone slider or <kbd>[</kbd>/<kbd>]</kbd></p>
               <p><strong>Use / Enter / Exit:</strong> <kbd>E</kbd></p>
               <p><strong>Map:</strong> <kbd>M</kbd> | <strong>Trainer:</strong> <kbd>T</kbd></p>
+              <p><strong>Look:</strong> Click left/right side of screen or use <kbd>Q</kbd>/<kbd>F</kbd>; <kbd>R</kbd> resets behind van</p>
               <p><strong>Road Lock:</strong> <kbd>L</kbd> or phone button to keep truck aligned to lane</p>
               <p><strong>Quick Park:</strong> <kbd>P</kbd> (snap to nearest house parking spot)</p>
               <p><strong>Weather:</strong> Use the Rain button to toggle rain events</p>
@@ -184,7 +186,7 @@
     </section>
 
     <section class="controls-card">
-      <p><strong>Controls:</strong> Move on foot and steer with <kbd>WASD</kbd> or <kbd>Arrow Keys</kbd>. Choose truck speed in mph from the phone slider (or <kbd>[</kbd>/<kbd>]</kbd>) and the truck maintains that speed. Press <kbd>E</kbd> to enter/exit truck and use tools. Press <kbd>P</kbd> while driving to quick-park in front of the nearest house. Press <kbd>M</kbd> to view the full area map. Press <kbd>T</kbd> to toggle Trainer Mode. During service hold <kbd>Space</kbd> and paint with the mouse circle (wheel adjusts concentration/coverage size), and press <kbd>E</kbd> near kids/dog toys to move them before spraying. Walking up to a house wall switches to first-person view until you back away. Use phone app tabs to switch between Messaging, Email, and Field Management. In Phone Field Management, select assigned customer and Time In, then add a tech comment and Time Out when done. Phone has a Controls button in the top-right panel.</p>
+      <p><strong>Controls:</strong> Move on foot and steer with <kbd>WASD</kbd> or <kbd>Arrow Keys</kbd>. Choose truck speed in mph from the phone slider (or <kbd>[</kbd>/<kbd>]</kbd>) and the truck maintains that speed. Press <kbd>E</kbd> to enter/exit truck and use tools. Press <kbd>P</kbd> while driving to quick-park in front of the nearest house. Click left/right in the driving view, or use <kbd>Q</kbd> / <kbd>F</kbd>, to rotate what you're looking at, and press <kbd>R</kbd> to reset behind the van. Press <kbd>M</kbd> to view the full area map. Press <kbd>T</kbd> to toggle Trainer Mode. During service hold <kbd>Space</kbd> and paint with the mouse circle (wheel adjusts concentration/coverage size), and press <kbd>E</kbd> near kids/dog toys to move them before spraying. Walking up to a house wall switches to first-person view until you back away. Use phone app tabs to switch between Messaging, Email, and Field Management. In Phone Field Management, select assigned customer and Time In, then add a tech comment and Time Out when done. Phone has a Controls button in the top-right panel.</p>
       <div class="trainer-toggle-row">
         <span>Trainer Mode</span>
         <button id="trainer-mode-btn" type="button" aria-pressed="false">Set <span id="trainer-mode-state">Off</span></button>
